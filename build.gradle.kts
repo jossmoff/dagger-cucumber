@@ -12,6 +12,8 @@ plugins {
     id("com.palantir.baseline-error-prone") version "0.9.0"
 }
 
+group = "dev.joss"
+
 repositories {
     mavenCentral()
 }
