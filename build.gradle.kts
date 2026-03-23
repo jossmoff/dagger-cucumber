@@ -9,7 +9,7 @@ plugins {
     id("com.palantir.git-version") version "5.0.0"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("com.diffplug.spotless") version "6.25.0"
-    id("com.palantir.baseline-error-prone") version "0.9.0"
+    id("com.palantir.baseline-error-prone") version "6.79.0"
 }
 
 group = "dev.joss"
