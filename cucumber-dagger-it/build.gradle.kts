@@ -3,7 +3,7 @@ import net.ltgt.gradle.errorprone.errorprone
 plugins {
     `java-library`
     jacoco
-    id("com.diffplug.spotless") version "6.25.0"
+    id("com.diffplug.spotless") version "8.4.0"
     id("com.palantir.baseline-error-prone") version "6.79.0"
 }
 
