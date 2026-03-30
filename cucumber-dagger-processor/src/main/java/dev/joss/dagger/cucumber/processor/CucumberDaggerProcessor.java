@@ -49,15 +49,18 @@ import javax.tools.StandardLocation;
  *   <li><strong>{@code GeneratedScopedComponent}</strong> — a Dagger {@code @Subcomponent} scoped
  *       with {@code @CucumberScoped} that declares provision methods for all scenario-scoped types
  *       and step-definition classes discovered in the glue package.
- *   <li><strong>{@code CucumberDaggerModule}</strong> — the module that users must include in their
- *       root {@code @Component}. Declares the subcomponent and provides a raw-type binding so that
- *       the root component can expose {@code CucumberScopedComponent.Builder} via {@code
- *       CucumberDaggerComponent#scopedComponentBuilder()}.
+ *   <li><strong>{@code CucumberDaggerModule}</strong> — the module that declares the subcomponent
+ *       and provides the raw-type {@code CucumberScopedComponent.Builder} binding needed by the
+ *       runtime.
+ *   <li><strong>{@code GeneratedCucumber{UserSimpleName}}</strong> — a wrapper {@code @Component}
+ *       that combines the user's modules with {@code CucumberDaggerModule}. Users do <em>not</em>
+ *       need to list {@code CucumberDaggerModule} themselves; the processor adds it automatically.
  *   <li><strong>{@code dev.joss.dagger.cucumber.generated.CucumberScopedComponentAccessor}</strong>
  *       — a simple accessor class that returns the {@code GeneratedScopedComponent} class literal,
  *       allowing the runtime to avoid a classpath scan at startup.
  *   <li><strong>{@code META-INF/services/…CucumberDaggerComponent}</strong> — service file entry
- *       pointing to the Dagger-generated root component factory ({@code DaggerXxx}).
+ *       pointing to the Dagger-generated factory for the wrapper component ({@code
+ *       DaggerGeneratedCucumber{UserSimpleName}}).
  * </ul>
  */
 @AutoService(Processor.class)
@@ -128,9 +131,9 @@ public final class CucumberDaggerProcessor extends AbstractProcessor {
     TypeElement cucumberScopedAnnoType =
         processingEnv.getElementUtils().getTypeElement(CUCUMBER_SCOPED);
 
+    List<TypeMirror> moduleTypes = new ArrayList<>();
     if (daggerComponentType != null) {
-      List<TypeMirror> moduleTypes =
-          extractModulesFromComponent(rootComponent, daggerComponentType);
+      moduleTypes = extractModulesFromComponent(rootComponent, daggerComponentType);
       for (TypeMirror moduleMirror : moduleTypes) {
         TypeElement moduleElement =
             (TypeElement) processingEnv.getTypeUtils().asElement(moduleMirror);
@@ -195,12 +198,16 @@ public final class CucumberDaggerProcessor extends AbstractProcessor {
       }
     }
 
+    List<AnnotationMirror> scopeAnnotations = extractScopeAnnotations(rootComponent);
+
     // Generate files
     generateGeneratedScopedModule(rootPackage, userScopedModules);
     generateGeneratedScopedComponent(rootPackage, scopedProvisionMethods, stepDefMethods);
     generateCucumberDaggerModule(rootPackage);
     generateCucumberScopedComponentAccessor(rootPackage);
-    generateServiceFile(rootPackage, rootComponent.getSimpleName().toString());
+    generateCucumberRootComponent(
+        rootPackage, rootComponent.getSimpleName().toString(), moduleTypes, scopeAnnotations);
+    generateServiceFile(rootPackage, "GeneratedCucumber" + rootComponent.getSimpleName());
 
     return true;
   }
@@ -371,6 +378,77 @@ public final class CucumberDaggerProcessor extends AbstractProcessor {
             .build();
 
     writeJavaFile(GENERATED_PKG, accessorType);
+  }
+
+  /**
+   * Generates {@code GeneratedCucumber{UserSimpleName}} — a Dagger {@code @Component} that combines
+   * the user's modules with the generated {@code CucumberDaggerModule}, so the user does not need
+   * to include {@code CucumberDaggerModule} in their own {@code @Component} declaration. The
+   * service file points to the Dagger-generated factory for this wrapper component.
+   *
+   * @param rootPackage the package of the user's annotated component
+   * @param rootComponentSimpleName the simple name of the user's component (e.g. {@code
+   *     AppComponent})
+   * @param userModules the module types already declared on the user's {@code @Component}
+   * @param scopeAnnotations scope annotations (e.g. {@code @Singleton}) copied from the user's
+   *     component
+   */
+  private void generateCucumberRootComponent(
+      String rootPackage,
+      String rootComponentSimpleName,
+      List<TypeMirror> userModules,
+      List<AnnotationMirror> scopeAnnotations) {
+    ClassName cucumberDaggerComponentName = ClassName.get(API_PKG, "CucumberDaggerComponent");
+    ClassName cucumberDaggerModuleName = ClassName.get(rootPackage, "CucumberDaggerModule");
+
+    CodeBlock.Builder modulesBlock = CodeBlock.builder().add("{");
+    for (int i = 0; i < userModules.size(); i++) {
+      if (i > 0) modulesBlock.add(", ");
+      modulesBlock.add("$T.class", TypeName.get(userModules.get(i)));
+    }
+    if (!userModules.isEmpty()) modulesBlock.add(", ");
+    modulesBlock.add("$T.class}", cucumberDaggerModuleName);
+
+    AnnotationSpec componentAnnotation =
+        AnnotationSpec.builder(ClassName.get("dagger", "Component"))
+            .addMember("modules", modulesBlock.build())
+            .build();
+
+    TypeSpec.Builder builder =
+        TypeSpec.interfaceBuilder("GeneratedCucumber" + rootComponentSimpleName)
+            .addModifiers(Modifier.PUBLIC)
+            .addAnnotation(componentAnnotation)
+            .addSuperinterface(cucumberDaggerComponentName);
+
+    for (AnnotationMirror scope : scopeAnnotations) {
+      builder.addAnnotation(AnnotationSpec.get(scope));
+    }
+
+    writeJavaFile(rootPackage, builder.build());
+  }
+
+  /**
+   * Returns the scope annotations (e.g. {@code @Singleton}) declared on {@code component} by
+   * finding annotations whose annotation type is itself meta-annotated with
+   * {@code @javax.inject.Scope}.
+   *
+   * @param component the component element to inspect
+   * @return annotations on {@code component} that are scope annotations
+   */
+  private List<AnnotationMirror> extractScopeAnnotations(TypeElement component) {
+    List<AnnotationMirror> scopes = new ArrayList<>();
+    TypeElement scopeType = processingEnv.getElementUtils().getTypeElement("javax.inject.Scope");
+    if (scopeType == null) return scopes;
+    for (AnnotationMirror am : component.getAnnotationMirrors()) {
+      TypeElement annoType = (TypeElement) am.getAnnotationType().asElement();
+      for (AnnotationMirror meta : annoType.getAnnotationMirrors()) {
+        if (processingEnv.getTypeUtils().isSameType(meta.getAnnotationType(), scopeType.asType())) {
+          scopes.add(am);
+          break;
+        }
+      }
+    }
+    return scopes;
   }
 
   /**
