@@ -1,0 +1,20 @@
+package dev.joss.dagger.cucumber.it;
+
+import dagger.Module;
+import dagger.Provides;
+import java.util.Map;
+import javax.inject.Singleton;
+
+/**
+ * User-defined root module that provides a {@link PriceList} singleton. Listed in {@link
+ * AppComponent}'s {@code modules} attribute alongside the generated {@code CucumberDaggerModule}.
+ */
+@Module
+public final class PriceListModule {
+
+  @Provides
+  @Singleton
+  static PriceList providePriceList() {
+    return new PriceList(Map.of("apple", 30, "banana", 15, "cherry", 50));
+  }
+}

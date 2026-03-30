@@ -8,13 +8,16 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":cucumber-dagger"))
-    annotationProcessor(project(":cucumber-dagger-processor"))
+    testImplementation(project(":cucumber-dagger"))
+    testAnnotationProcessor(project(":cucumber-dagger-processor"))
+    testAnnotationProcessor("com.google.dagger:dagger-compiler:2.59.2")
 
     testImplementation(platform("org.junit:junit-bom:5.10.3"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.junit.platform:junit-platform-suite-api:1.10.3")
+    testRuntimeOnly("org.junit.platform:junit-platform-suite-engine:1.10.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.23.0")
+    testImplementation("io.cucumber:cucumber-junit-platform-engine:7.34.3")
+    testImplementation("io.cucumber:cucumber-java:7.34.3")
     testImplementation("org.assertj:assertj-core:3.27.7")
 }
 
@@ -26,7 +29,7 @@ spotless {
 
 tasks.test {
     useJUnitPlatform {
-        includeEngines("junit-jupiter")
+        includeEngines("junit-platform-suite")
     }
     finalizedBy(tasks.jacocoTestReport)
 }
