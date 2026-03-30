@@ -287,11 +287,11 @@ final class CucumberDaggerGenerator {
   // ---------------------------------------------------------------------------
 
   /**
-   * Writes a generated Java source file to the filer. Skips the filer write silently if a file with the
-   * same qualified name has already been generated in a prior processing round (explicit duplicate
-   * tracking replaces {@link javax.annotation.processing.FilerException} swallowing). Passes {@code
-   * originatingElement} to {@link javax.annotation.processing.Filer#createSourceFile} to improve
-   * incremental compilation behaviour in IDEs and build tools.
+   * Writes a generated Java source file to the filer. Skips the filer write silently if a file with
+   * the same qualified name has already been generated in a prior processing round (explicit
+   * duplicate tracking replaces {@link javax.annotation.processing.FilerException} swallowing).
+   * Passes {@code originatingElement} to {@link javax.annotation.processing.Filer#createSourceFile}
+   * to improve incremental compilation behaviour in IDEs and build tools.
    */
   private void writeJavaFile(
       String packageName, TypeSpec typeSpec, TypeElement originatingElement) {
