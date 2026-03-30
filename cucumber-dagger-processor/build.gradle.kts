@@ -13,6 +13,13 @@ dependencies {
     implementation("com.squareup:javapoet:1.13.0")
     compileOnly("com.google.auto.service:auto-service-annotations:1.1.1")
     annotationProcessor("com.google.auto.service:auto-service:1.1.1")
+
+    testImplementation(project(":cucumber-dagger"))
+    testImplementation("com.google.testing.compile:compile-testing:0.21.0")
+    testImplementation(platform("org.junit:junit-bom:5.10.3"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testAnnotationProcessor("com.google.auto.service:auto-service:1.1.1")
 }
 
 java {
@@ -23,6 +30,20 @@ java {
 spotless {
     java {
         googleJavaFormat()
+    }
+}
+
+tasks.test {
+    useJUnitPlatform {
+        includeEngines("junit-jupiter")
+    }
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
     }
 }
 
@@ -45,6 +66,7 @@ tasks.withType<JavaCompile>().configureEach {
         "PreferSafeLoggableExceptions",
         "PreferSafeLoggingPreconditions",
         "PreferSafeLogger",
-        "Slf4jLogsafeArgs"
+        "Slf4jLogsafeArgs",
+        "StringConcatToTextBlock"
     )
 }
