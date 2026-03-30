@@ -23,7 +23,11 @@ public interface CucumberScopedComponent {
    */
   interface Builder<T extends CucumberScopedComponent> {
 
-    /** Creates and returns a new scoped component instance. */
+    /**
+     * Creates and returns a new scoped component instance.
+     *
+     * @return a new instance of the per-scenario subcomponent
+     */
     T build();
   }
 }

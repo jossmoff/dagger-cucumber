@@ -15,6 +15,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -140,7 +141,8 @@ class DaggerBackend implements Backend {
       Enumeration<URL> urls = cl.getResources(COMPONENT_SERVICE_FILE);
       while (urls.hasMoreElements()) {
         URL url = urls.nextElement();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
+        try (BufferedReader reader =
+            new BufferedReader(new InputStreamReader(url.openStream(), Charset.defaultCharset()))) {
           String line;
           while ((line = reader.readLine()) != null) {
             line = line.trim();

@@ -27,12 +27,12 @@ final class KnownTypes {
   final TypeElement daggerProvides;
 
   /** {@code jakarta.inject.Inject} */
-  final TypeElement javaxInject;
+  final TypeElement jakartaInject;
 
   /**
    * {@code jakarta.inject.Scope} — meta-annotation for scope annotations such as {@code @Singleton}
    */
-  final TypeElement javaxScope;
+  final TypeElement jakartaScope;
 
   /**
    * {@code jakarta.inject.Qualifier} — meta-annotation for qualifier annotations such as
@@ -46,8 +46,8 @@ final class KnownTypes {
     cucumberScoped = elements.getTypeElement(API_PKG + ".CucumberScoped");
     daggerComponent = elements.getTypeElement("dagger.Component");
     daggerProvides = elements.getTypeElement("dagger.Provides");
-    javaxInject = elements.getTypeElement("jakarta.inject.Inject");
-    javaxScope = elements.getTypeElement("jakarta.inject.Scope");
+    jakartaInject = elements.getTypeElement("jakarta.inject.Inject");
+    jakartaScope = elements.getTypeElement("jakarta.inject.Scope");
     javaxQualifier = elements.getTypeElement("jakarta.inject.Qualifier");
   }
 }

@@ -57,10 +57,6 @@ final class CucumberDaggerGenerator {
     generateServiceFile(model);
   }
 
-  // ---------------------------------------------------------------------------
-  // Generation methods
-  // ---------------------------------------------------------------------------
-
   /**
    * Generates {@code GeneratedScopedModule} — a Dagger {@code @Module} used by {@code
    * GeneratedScopedComponent}. If the user has provided Style-B scoped modules (containing
@@ -69,11 +65,11 @@ final class CucumberDaggerGenerator {
   private void generateGeneratedScopedModule(ProcessingModel model) {
     AnnotationSpec.Builder moduleAnnotation =
         AnnotationSpec.builder(ClassName.get("dagger", "Module"));
-    if (!model.userScopedModules.isEmpty()) {
+    if (!model.userScopedModules().isEmpty()) {
       CodeBlock.Builder includes = CodeBlock.builder().add("{");
-      for (int i = 0; i < model.userScopedModules.size(); i++) {
+      for (int i = 0; i < model.userScopedModules().size(); i++) {
         if (i > 0) includes.add(", ");
-        includes.add("$T.class", ClassName.get(model.userScopedModules.get(i)));
+        includes.add("$T.class", ClassName.get(model.userScopedModules().get(i)));
       }
       includes.add("}");
       moduleAnnotation.addMember("includes", includes.build());
@@ -85,7 +81,7 @@ final class CucumberDaggerGenerator {
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
             .build();
 
-    writeJavaFile(model.rootPackage, moduleType, model.rootComponent);
+    writeJavaFile(model.rootPackage(), moduleType, model.rootComponent());
   }
 
   /**
@@ -94,9 +90,10 @@ final class CucumberDaggerGenerator {
    * generates the inner {@code Builder} interface.
    */
   private void generateGeneratedScopedComponent(ProcessingModel model) {
-    ClassName generatedScopedModuleName = ClassName.get(model.rootPackage, "GeneratedScopedModule");
+    ClassName generatedScopedModuleName =
+        ClassName.get(model.rootPackage(), "GeneratedScopedModule");
     ClassName generatedScopedComponentName =
-        ClassName.get(model.rootPackage, "GeneratedScopedComponent");
+        ClassName.get(model.rootPackage(), "GeneratedScopedComponent");
     ClassName cucumberScopedComponentName = ClassName.get(API_PKG, "CucumberScopedComponent");
 
     AnnotationSpec cucumberScopedAnnotation =
@@ -113,7 +110,7 @@ final class CucumberDaggerGenerator {
             .addAnnotation(subcomponentAnnotation)
             .addSuperinterface(cucumberScopedComponentName);
 
-    for (Map.Entry<TypeName, String> entry : model.scopedProvisionMethods.entrySet()) {
+    for (Map.Entry<TypeName, String> entry : model.scopedProvisionMethods().entrySet()) {
       componentBuilder.addMethod(
           MethodSpec.methodBuilder(entry.getValue())
               .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
@@ -121,7 +118,7 @@ final class CucumberDaggerGenerator {
               .build());
     }
 
-    for (Map.Entry<TypeName, String> entry : model.stepDefMethods.entrySet()) {
+    for (Map.Entry<TypeName, String> entry : model.stepDefMethods().entrySet()) {
       componentBuilder.addMethod(
           MethodSpec.methodBuilder(entry.getValue())
               .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
@@ -142,7 +139,7 @@ final class CucumberDaggerGenerator {
 
     componentBuilder.addType(builderInterface);
 
-    writeJavaFile(model.rootPackage, componentBuilder.build(), model.rootComponent);
+    writeJavaFile(model.rootPackage(), componentBuilder.build(), model.rootComponent());
   }
 
   /**
@@ -152,9 +149,9 @@ final class CucumberDaggerGenerator {
    */
   private void generateCucumberDaggerModule(ProcessingModel model) {
     ClassName generatedScopedComponentName =
-        ClassName.get(model.rootPackage, "GeneratedScopedComponent");
+        ClassName.get(model.rootPackage(), "GeneratedScopedComponent");
     ClassName generatedScopedBuilderName =
-        ClassName.get(model.rootPackage, "GeneratedScopedComponent", "Builder");
+        ClassName.get(model.rootPackage(), "GeneratedScopedComponent", "Builder");
     ClassName cucumberScopedBuilderName =
         ClassName.get(API_PKG, "CucumberScopedComponent", "Builder");
 
@@ -186,7 +183,7 @@ final class CucumberDaggerGenerator {
             .addMethod(providesMethod)
             .build();
 
-    writeJavaFile(model.rootPackage, moduleType, model.rootComponent);
+    writeJavaFile(model.rootPackage(), moduleType, model.rootComponent());
   }
 
   /**
@@ -198,7 +195,7 @@ final class CucumberDaggerGenerator {
   private void generateCucumberScopedComponentAccessor(ProcessingModel model) {
     ClassName cucumberScopedComponentName = ClassName.get(API_PKG, "CucumberScopedComponent");
     ClassName generatedScopedComponentName =
-        ClassName.get(model.rootPackage, "GeneratedScopedComponent");
+        ClassName.get(model.rootPackage(), "GeneratedScopedComponent");
 
     ParameterizedTypeName returnType =
         ParameterizedTypeName.get(
@@ -217,7 +214,7 @@ final class CucumberDaggerGenerator {
             .addMethod(method)
             .build();
 
-    writeJavaFile(GENERATED_PKG, accessorType, model.rootComponent);
+    writeJavaFile(GENERATED_PKG, accessorType, model.rootComponent());
   }
 
   /**
@@ -227,14 +224,14 @@ final class CucumberDaggerGenerator {
    */
   private void generateCucumberRootComponent(ProcessingModel model) {
     ClassName cucumberDaggerComponentName = ClassName.get(API_PKG, "CucumberDaggerComponent");
-    ClassName cucumberDaggerModuleName = ClassName.get(model.rootPackage, "CucumberDaggerModule");
+    ClassName cucumberDaggerModuleName = ClassName.get(model.rootPackage(), "CucumberDaggerModule");
 
     CodeBlock.Builder modulesBlock = CodeBlock.builder().add("{");
-    for (int i = 0; i < model.userModules.size(); i++) {
+    for (int i = 0; i < model.userModules().size(); i++) {
       if (i > 0) modulesBlock.add(", ");
-      modulesBlock.add("$T.class", TypeName.get(model.userModules.get(i)));
+      modulesBlock.add("$T.class", TypeName.get(model.userModules().get(i)));
     }
-    if (!model.userModules.isEmpty()) modulesBlock.add(", ");
+    if (!model.userModules().isEmpty()) modulesBlock.add(", ");
     modulesBlock.add("$T.class}", cucumberDaggerModuleName);
 
     AnnotationSpec componentAnnotation =
@@ -242,18 +239,18 @@ final class CucumberDaggerGenerator {
             .addMember("modules", modulesBlock.build())
             .build();
 
-    String simpleName = model.rootComponent.getSimpleName().toString();
+    String simpleName = model.rootComponent().getSimpleName().toString();
     TypeSpec.Builder builder =
         TypeSpec.interfaceBuilder("GeneratedCucumber" + simpleName)
             .addModifiers(Modifier.PUBLIC)
             .addAnnotation(componentAnnotation)
             .addSuperinterface(cucumberDaggerComponentName);
 
-    for (AnnotationMirror scope : model.scopeAnnotations) {
+    for (AnnotationMirror scope : model.scopeAnnotations()) {
       builder.addAnnotation(AnnotationSpec.get(scope));
     }
 
-    writeJavaFile(model.rootPackage, builder.build(), model.rootComponent);
+    writeJavaFile(model.rootPackage(), builder.build(), model.rootComponent());
   }
 
   /**
@@ -264,8 +261,8 @@ final class CucumberDaggerGenerator {
     String serviceFileName = "META-INF/services/" + API_PKG + ".CucumberDaggerComponent";
     if (!generatedFiles.add(serviceFileName)) return;
 
-    String simpleName = model.rootComponent.getSimpleName().toString();
-    String implementation = model.rootPackage + ".DaggerGeneratedCucumber" + simpleName;
+    String simpleName = model.rootComponent().getSimpleName().toString();
+    String implementation = model.rootPackage() + ".DaggerGeneratedCucumber" + simpleName;
     try {
       FileObject fo =
           processingEnv
@@ -281,7 +278,7 @@ final class CucumberDaggerGenerator {
           .printMessage(
               Diagnostic.Kind.ERROR,
               "Failed to write service file: " + e.getMessage(),
-              model.rootComponent);
+              model.rootComponent());
     }
   }
 
@@ -290,7 +287,7 @@ final class CucumberDaggerGenerator {
   // ---------------------------------------------------------------------------
 
   /**
-   * Writes a generated Java source file to the filer. Skips the write silently if a file with the
+   * Writes a generated Java source file to the filer. Skips the filer write silently if a file with the
    * same qualified name has already been generated in a prior processing round (explicit duplicate
    * tracking replaces {@link javax.annotation.processing.FilerException} swallowing). Passes {@code
    * originatingElement} to {@link javax.annotation.processing.Filer#createSourceFile} to improve

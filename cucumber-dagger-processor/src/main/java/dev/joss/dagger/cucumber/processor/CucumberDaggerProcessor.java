@@ -107,10 +107,6 @@ public final class CucumberDaggerProcessor extends AbstractProcessor {
     return false;
   }
 
-  // ---------------------------------------------------------------------------
-  // Discovery
-  // ---------------------------------------------------------------------------
-
   /**
    * Discovers all elements needed for generation and validates them. Returns a fully-populated
    * {@link ProcessingModel}, or {@code null} if any validation error was emitted (to avoid
@@ -204,8 +200,8 @@ public final class CucumberDaggerProcessor extends AbstractProcessor {
 
     // Step C — find step-def classes: @Inject constructors in the glue package, excluding scoped
     Map<TypeName, String> stepDefMethods = new LinkedHashMap<>();
-    if (knownTypes.javaxInject != null) {
-      for (Element e : roundEnv.getElementsAnnotatedWith(knownTypes.javaxInject)) {
+    if (knownTypes.jakartaInject != null) {
+      for (Element e : roundEnv.getElementsAnnotatedWith(knownTypes.jakartaInject)) {
         if (e.getKind() != ElementKind.CONSTRUCTOR) continue;
         TypeElement enclosing = (TypeElement) e.getEnclosingElement();
         if (scopedClasses.contains(enclosing)) continue;
@@ -218,12 +214,12 @@ public final class CucumberDaggerProcessor extends AbstractProcessor {
     }
 
     // Validation — every @CucumberScoped class must have an @Inject constructor
-    if (knownTypes.javaxInject != null) {
+    if (knownTypes.jakartaInject != null) {
       for (TypeElement scopedClass : scopedClasses) {
         boolean hasInjectConstructor = false;
         for (Element enclosed : scopedClass.getEnclosedElements()) {
           if (enclosed.getKind() != ElementKind.CONSTRUCTOR) continue;
-          if (annotationUtils.hasAnnotation(enclosed, knownTypes.javaxInject)) {
+          if (annotationUtils.hasAnnotation(enclosed, knownTypes.jakartaInject)) {
             hasInjectConstructor = true;
             break;
           }
@@ -247,7 +243,7 @@ public final class CucumberDaggerProcessor extends AbstractProcessor {
 
     List<AnnotationMirror> scopeAnnotations =
         annotationUtils.findMetaAnnotated(
-            rootComponent.getAnnotationMirrors(), knownTypes.javaxScope);
+            rootComponent.getAnnotationMirrors(), knownTypes.jakartaScope);
 
     return new ProcessingModel(
         rootComponent,

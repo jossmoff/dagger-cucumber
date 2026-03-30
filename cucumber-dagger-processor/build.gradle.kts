@@ -17,6 +17,8 @@ dependencies {
     testImplementation(project(":cucumber-dagger"))
     testImplementation("com.google.testing.compile:compile-testing:0.21.0")
     testImplementation(platform("org.junit:junit-bom:5.10.3"))
+    testImplementation("org.mockito:mockito-junit-jupiter:5.23.0")
+    testImplementation("org.assertj:assertj-core:3.27.7")
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testAnnotationProcessor("com.google.auto.service:auto-service:1.1.1")
