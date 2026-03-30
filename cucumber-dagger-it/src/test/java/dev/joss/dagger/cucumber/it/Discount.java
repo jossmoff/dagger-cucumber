@@ -1,7 +1,7 @@
 package dev.joss.dagger.cucumber.it;
 
 import dev.joss.dagger.cucumber.api.CucumberScoped;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * Per-scenario discount applied at checkout (Style-A {@code @CucumberScoped}). A fresh instance

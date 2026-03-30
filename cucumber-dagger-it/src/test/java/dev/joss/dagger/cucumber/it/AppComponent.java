@@ -2,7 +2,7 @@ package dev.joss.dagger.cucumber.it;
 
 import dagger.Component;
 import dev.joss.dagger.cucumber.api.CucumberDaggerConfiguration;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 /**
  * Root Dagger component for the integration-test suite.

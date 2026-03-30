@@ -1,10 +1,10 @@
 package dev.joss.dagger.cucumber.it;
 
 import dev.joss.dagger.cucumber.api.CucumberScoped;
+import jakarta.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import javax.inject.Inject;
 
 /**
  * Per-scenario shopping basket (Style-A {@code @CucumberScoped}). A fresh instance is injected for

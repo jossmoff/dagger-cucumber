@@ -25,6 +25,9 @@ public interface CucumberDaggerComponent {
    * <p>The concrete binding is provided by the generated {@code CucumberDaggerModule}. Callers
    * should invoke {@link CucumberScopedComponent.Builder#build()} on the returned builder to obtain
    * a fresh scoped component instance.
+   *
+   * @return a builder for the generated per-scenario subcomponent
+   * @see CucumberScopedComponent.Builder
    */
   @SuppressWarnings("rawtypes")
   CucumberScopedComponent.Builder scopedComponentBuilder();

@@ -51,7 +51,7 @@ class DaggerBackend implements Backend {
   private final ClasspathScanner classPathScanner;
   private final Supplier<ClassLoader> classLoaderSupplier;
 
-  /** Creates a new backend. The {@code lookup} parameter is required by the SPI but not used. */
+  /** Creates a new backend. The {@code _lookup} parameter is required by the SPI but not used. */
   DaggerBackend(Lookup _lookup, Container container, Supplier<ClassLoader> classLoaderSupplier) {
     this.container = container;
     this.classLoaderSupplier = classLoaderSupplier;

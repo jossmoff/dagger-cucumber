@@ -49,7 +49,7 @@ final class AnnotationUtils {
   /**
    * Returns the subset of {@code annotationMirrors} whose annotation type is meta-annotated with
    * {@code targetMeta}. Used to find scope annotations (meta-annotated with {@code
-   * javax.inject.Scope}) and qualifier annotations on an element.
+   * jakarta.inject.Scope}) and qualifier annotations on an element.
    */
   List<AnnotationMirror> findMetaAnnotated(
       List<? extends AnnotationMirror> annotationMirrors, TypeElement targetMeta) {

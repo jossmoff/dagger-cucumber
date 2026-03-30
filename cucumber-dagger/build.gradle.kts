@@ -12,6 +12,7 @@ plugins {
 dependencies {
     api("io.cucumber:cucumber-core:7.34.3")
     api("com.google.dagger:dagger:2.59.2")
+    api("jakarta.inject:jakarta.inject-api:2.0.1")
 
     testImplementation(platform("org.junit:junit-bom:5.10.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")

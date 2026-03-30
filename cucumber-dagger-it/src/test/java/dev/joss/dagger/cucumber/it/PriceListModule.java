@@ -2,8 +2,8 @@ package dev.joss.dagger.cucumber.it;
 
 import dagger.Module;
 import dagger.Provides;
+import jakarta.inject.Singleton;
 import java.util.Map;
-import javax.inject.Singleton;
 
 /**
  * User-defined root module that provides a {@link PriceList} singleton. Listed in {@link

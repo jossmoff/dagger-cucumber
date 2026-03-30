@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * Step definitions for checkout scenarios. Injects both the per-scenario {@link Basket} and {@link
