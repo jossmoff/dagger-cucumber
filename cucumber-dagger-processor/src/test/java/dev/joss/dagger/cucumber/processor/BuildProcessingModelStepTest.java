@@ -158,7 +158,8 @@ class BuildProcessingModelStepTest {
     assertThat(captured.get().isHalt()).isFalse();
     ProcessingModel model = captured.get().value();
     assertThat(model.userScopedModules()).hasSize(1);
-    assertThat(model.userScopedModules().getFirst().getSimpleName().toString()).isEqualTo("SomeModule");
+    assertThat(model.userScopedModules().getFirst().getSimpleName().toString())
+        .isEqualTo("SomeModule");
     assertThat(model.scopedProvisionMethods().values()).containsExactly("someService");
   }
 

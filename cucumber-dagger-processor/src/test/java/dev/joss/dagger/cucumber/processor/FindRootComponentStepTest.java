@@ -19,12 +19,13 @@ class FindRootComponentStepTest {
 
     Compilation compilation =
         StepTestSupport.compile(
-            ctx -> captured.set(
-                new FindRootComponentStep()
-                    .execute(
-                        ctx,
-                        ctx.roundEnv.getElementsAnnotatedWith(
-                            ctx.knownTypes.cucumberDaggerConfiguration))),
+            ctx ->
+                captured.set(
+                    new FindRootComponentStep()
+                        .execute(
+                            ctx,
+                            ctx.roundEnv.getElementsAnnotatedWith(
+                                ctx.knownTypes.cucumberDaggerConfiguration))),
             JavaFileObjects.forSourceLines(
                 "test.AppComponent",
                 "package test;",
@@ -83,12 +84,13 @@ class FindRootComponentStepTest {
 
     Compilation compilation =
         StepTestSupport.compile(
-            ctx -> captured.set(
-                new FindRootComponentStep()
-                    .execute(
-                        ctx,
-                        ctx.roundEnv.getElementsAnnotatedWith(
-                            ctx.knownTypes.cucumberDaggerConfiguration))),
+            ctx ->
+                captured.set(
+                    new FindRootComponentStep()
+                        .execute(
+                            ctx,
+                            ctx.roundEnv.getElementsAnnotatedWith(
+                                ctx.knownTypes.cucumberDaggerConfiguration))),
             JavaFileObjects.forSourceLines(
                 "test.AppComponent",
                 "package test;",

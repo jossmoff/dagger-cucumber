@@ -37,18 +37,19 @@ class PipelineTest {
   void contextIsThreadedUnchangedToEveryStep() {
     String[] capturedCtx = new String[2];
 
-    var result = Pipeline.of("myCtx", 0)
-        .pipe(
-            (ctx, n) -> {
-              capturedCtx[0] = ctx;
-              return StepResult.success(n + 1);
-            })
-        .pipe(
-            (ctx, n) -> {
-              capturedCtx[1] = ctx;
-              return StepResult.success(n + 1);
-            })
-        .result();
+    var result =
+        Pipeline.of("myCtx", 0)
+            .pipe(
+                (ctx, n) -> {
+                  capturedCtx[0] = ctx;
+                  return StepResult.success(n + 1);
+                })
+            .pipe(
+                (ctx, n) -> {
+                  capturedCtx[1] = ctx;
+                  return StepResult.success(n + 1);
+                })
+            .result();
 
     assertThat(result.isHalt()).isFalse();
 
