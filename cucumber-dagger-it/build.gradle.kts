@@ -2,7 +2,6 @@ import net.ltgt.gradle.errorprone.errorprone
 
 plugins {
     `java-library`
-    jacoco
     id("com.diffplug.spotless") version "8.4.0"
     id("com.palantir.baseline-error-prone") version "6.79.0"
 }
@@ -30,14 +29,6 @@ spotless {
 tasks.test {
     useJUnitPlatform {
         includeEngines("junit-platform-suite")
-    }
-    finalizedBy(tasks.jacocoTestReport)
-}
-
-tasks.jacocoTestReport {
-    dependsOn(tasks.test)
-    reports {
-        xml.required.set(true)
     }
 }
 
