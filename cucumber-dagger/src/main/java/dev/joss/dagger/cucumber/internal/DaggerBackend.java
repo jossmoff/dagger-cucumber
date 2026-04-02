@@ -111,13 +111,11 @@ class DaggerBackend implements Backend {
       throw new IllegalStateException(
           "Multiple CucumberDaggerComponent factories found: " + classNames);
     }
-    String factoryClassName = classNames.get(0);
+    String factoryClassName = classNames.getFirst();
     try {
       Class<?> factoryClass = Class.forName(factoryClassName, true, cl);
       Method createMethod = factoryClass.getMethod("create");
-      @SuppressWarnings("unchecked")
-      CucumberDaggerComponent component = (CucumberDaggerComponent) createMethod.invoke(null);
-      return component;
+      return (CucumberDaggerComponent) createMethod.invoke(null);
     } catch (ClassNotFoundException e) {
       throw new IllegalStateException("Could not load component class: " + factoryClassName, e);
     } catch (NoSuchMethodException e) {

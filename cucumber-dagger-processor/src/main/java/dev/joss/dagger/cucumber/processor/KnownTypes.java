@@ -38,7 +38,7 @@ final class KnownTypes {
    * {@code jakarta.inject.Qualifier} — meta-annotation for qualifier annotations such as
    * {@code @Named}
    */
-  final TypeElement javaxQualifier;
+  final TypeElement jakartaQualifier;
 
   KnownTypes(ProcessingEnvironment processingEnv) {
     Elements elements = processingEnv.getElementUtils();
@@ -48,6 +48,6 @@ final class KnownTypes {
     daggerProvides = elements.getTypeElement("dagger.Provides");
     jakartaInject = elements.getTypeElement("jakarta.inject.Inject");
     jakartaScope = elements.getTypeElement("jakarta.inject.Scope");
-    javaxQualifier = elements.getTypeElement("jakarta.inject.Qualifier");
+    jakartaQualifier = elements.getTypeElement("jakarta.inject.Qualifier");
   }
 }
