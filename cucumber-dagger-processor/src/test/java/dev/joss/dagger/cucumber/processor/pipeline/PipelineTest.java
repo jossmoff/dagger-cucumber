@@ -37,7 +37,7 @@ class PipelineTest {
   void contextIsThreadedUnchangedToEveryStep() {
     String[] capturedCtx = new String[2];
 
-    var result =
+    StepResult<Integer> result =
         Pipeline.of("myCtx", 0)
             .pipe(
                 (ctx, n) -> {
