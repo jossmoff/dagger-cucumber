@@ -2,7 +2,7 @@ package dev.joss.dagger.cucumber.processor.pipeline;
 
 /**
  * A fluent, immutable pipeline that threads a shared context {@code C} through a sequence of {@link
- * ProcessingStep}s, short-circuiting on the first {@link StepResult#halt()}.
+ * ProcessingStep}s, short-circuiting on the first {@link StepResult#failed()}.
  *
  * <p>Typical usage:
  *
@@ -34,8 +34,8 @@ public final class Pipeline<C, T> {
   }
 
   /**
-   * Creates a pipeline with {@code input} wrapped in a {@link StepResult#success(Object) success}
-   * result. The pipeline is ready to accept its first {@link #pipe} call.
+   * Creates a pipeline with {@code input} wrapped in a {@link StepResult#succeeded(Object)}
+   * success} result. The pipeline is ready to accept its first {@link #pipe} call.
    *
    * @param context shared context threaded through all steps
    * @param input initial input value for the first step
