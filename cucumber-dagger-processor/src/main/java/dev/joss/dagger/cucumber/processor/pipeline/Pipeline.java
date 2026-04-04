@@ -41,7 +41,7 @@ public final class Pipeline<C, T> {
    * @param input initial input value for the first step
    */
   public static <C, T> Pipeline<C, T> of(C context, T input) {
-    return new Pipeline<>(context, StepResult.success(input));
+    return new Pipeline<>(context, StepResult.succeeded(input));
   }
 
   /**
@@ -53,7 +53,7 @@ public final class Pipeline<C, T> {
    * @return a new pipeline carrying either the step's output or a propagated halt
    */
   public <U> Pipeline<C, U> pipe(ProcessingStep<C, T, U> step) {
-    if (current.isHalt()) return new Pipeline<>(context, StepResult.halt());
+    if (current.isFailed()) return new Pipeline<>(context, StepResult.failed());
     return new Pipeline<>(context, step.execute(context, current.value()));
   }
 

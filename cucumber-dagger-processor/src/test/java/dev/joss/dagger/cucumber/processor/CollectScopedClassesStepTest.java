@@ -23,12 +23,8 @@ class CollectScopedClassesStepTest {
           "@Component(modules = {})",
           "public interface AppComponent {}");
 
-  // ---------------------------------------------------------------------------
-  // Happy paths
-  // ---------------------------------------------------------------------------
-
   @Test
-  void concreteClassWithInjectConstructor_returnsSuccessWithOneEntry() {
+  void concreteClassWithInjectConstructorReturnsSuccessWithOneEntry() {
     AtomicReference<StepResult<CollectedScopedClasses>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -52,14 +48,14 @@ class CollectScopedClassesStepTest {
                 "}"));
 
     assertThat(compilation).succeeded();
-    assertThat(captured.get().isHalt()).isFalse();
+    assertThat(captured.get().isFailed()).isFalse();
     assertThat(captured.get().value().scopedClasses()).hasSize(1);
     assertThat(captured.get().value().scopedClasses().getFirst().getSimpleName().toString())
         .isEqualTo("MyScoped");
   }
 
   @Test
-  void scopedClassOutsideRootPackage_excluded() {
+  void scopedClassOutsideRootPackageExcluded() {
     AtomicReference<StepResult<CollectedScopedClasses>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -83,16 +79,12 @@ class CollectScopedClassesStepTest {
                 "}"));
 
     assertThat(compilation).succeeded();
-    assertThat(captured.get().isHalt()).isFalse();
+    assertThat(captured.get().isFailed()).isFalse();
     assertThat(captured.get().value().scopedClasses()).isEmpty();
   }
 
-  // ---------------------------------------------------------------------------
-  // Validation errors
-  // ---------------------------------------------------------------------------
-
   @Test
-  void interfaceAnnotatedWithCucumberScoped_haltsAndEmitsError() {
+  void interfaceAnnotatedWithCucumberScopedHaltsAndEmitsError() {
     AtomicReference<StepResult<CollectedScopedClasses>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -113,11 +105,11 @@ class CollectScopedClassesStepTest {
                 "public interface BadScoped {}"));
 
     assertThat(compilation).hadErrorContaining("@CucumberScoped can only be applied to concrete");
-    assertThat(captured.get().isHalt()).isTrue();
+    assertThat(captured.get().isFailed()).isTrue();
   }
 
   @Test
-  void abstractClassAnnotatedWithCucumberScoped_haltsAndEmitsError() {
+  void abstractClassAnnotatedWithCucumberScopedHaltsAndEmitsError() {
     AtomicReference<StepResult<CollectedScopedClasses>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -138,11 +130,11 @@ class CollectScopedClassesStepTest {
                 "public abstract class BadScoped {}"));
 
     assertThat(compilation).hadErrorContaining("@CucumberScoped can only be applied to concrete");
-    assertThat(captured.get().isHalt()).isTrue();
+    assertThat(captured.get().isFailed()).isTrue();
   }
 
   @Test
-  void concreteClassWithoutInjectConstructor_haltsAndEmitsError() {
+  void concreteClassWithoutInjectConstructorHaltsAndEmitsError() {
     AtomicReference<StepResult<CollectedScopedClasses>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -163,11 +155,11 @@ class CollectScopedClassesStepTest {
                 "public class BadScoped {}"));
 
     assertThat(compilation).hadErrorContaining("must declare an @Inject constructor");
-    assertThat(captured.get().isHalt()).isTrue();
+    assertThat(captured.get().isFailed()).isTrue();
   }
 
   @Test
-  void multipleErrors_allEmittedBeforeHalting() {
+  void multipleErrorsAllEmittedBeforeHalting() {
     AtomicReference<StepResult<CollectedScopedClasses>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -195,6 +187,6 @@ class CollectScopedClassesStepTest {
 
     assertThat(compilation).hadErrorContaining("@CucumberScoped can only be applied to concrete");
     assertThat(compilation).hadErrorContaining("must declare an @Inject constructor");
-    assertThat(captured.get().isHalt()).isTrue();
+    assertThat(captured.get().isFailed()).isTrue();
   }
 }

@@ -11,11 +11,8 @@ import org.junit.jupiter.api.Test;
 
 class DaggerObjectFactoryTest {
 
-  // ---------------------------------------------------------------------------
   // Test helpers — interfaces and classes must be public so that
-  // MethodHandles.lookup() (called from DaggerObjectFactory) can unreflect
-  // their methods.
-  // ---------------------------------------------------------------------------
+  // MethodHandles.lookup() (called from DaggerObjectFactory) can unreflect their methods.
 
   public static class StepDef {}
 
@@ -72,45 +69,33 @@ class DaggerObjectFactoryTest {
     ObjectFactoryHolder.register(null);
   }
 
-  // ---------------------------------------------------------------------------
-  // Construction
-  // ---------------------------------------------------------------------------
-
   @Test
-  void construction_registersInHolder() {
+  void constructionRegistersInHolder() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
     assertThat(ObjectFactoryHolder.get()).isSameAs(factory);
   }
 
-  // ---------------------------------------------------------------------------
-  // Lifecycle stubs
-  // ---------------------------------------------------------------------------
-
   @Test
-  void start_isNoOp() {
+  void startIsNoOp() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
-    factory.start(); // must not throw
+    factory.start();
   }
 
   @Test
-  void stop_isNoOp() {
+  void stopIsNoOp() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
-    factory.stop(); // must not throw
+    factory.stop();
   }
 
   @Test
-  void addClass_alwaysReturnsTrue() {
+  void addClassAlwaysReturnsTrue() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
     assertThat(factory.addClass(String.class)).isTrue();
     assertThat(factory.addClass(Integer.class)).isTrue();
   }
 
-  // ---------------------------------------------------------------------------
-  // buildWorld
-  // ---------------------------------------------------------------------------
-
   @Test
-  void buildWorld_throwsWhenNotConfigured() {
+  void buildWorldThrowsWhenNotConfigured() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
 
     assertThatThrownBy(factory::buildWorld)
@@ -119,7 +104,7 @@ class DaggerObjectFactoryTest {
   }
 
   @Test
-  void buildWorld_createsFreshScopedComponentEachScenario() {
+  void buildWorldCreatesFreshScopedComponentEachScenario() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
     factory.configure(new TestRootComponentImpl(), TestScopedComponent.class);
 
@@ -131,16 +116,11 @@ class DaggerObjectFactoryTest {
     StepDef second = factory.getInstance(StepDef.class);
     factory.disposeWorld();
 
-    // Each buildWorld creates a fresh subcomponent, so provision method results are distinct
     assertThat(first).isNotSameAs(second);
   }
 
-  // ---------------------------------------------------------------------------
-  // getInstance
-  // ---------------------------------------------------------------------------
-
   @Test
-  void getInstance_returnsScopedInstance() {
+  void getInstanceReturnsScopedInstance() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
     factory.configure(new TestRootComponentImpl(), TestScopedComponent.class);
     factory.buildWorld();
@@ -152,7 +132,7 @@ class DaggerObjectFactoryTest {
   }
 
   @Test
-  void getInstance_cachesInstanceWithinScenario() {
+  void getInstanceCachesInstanceWithinScenario() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
     factory.configure(new TestRootComponentImpl(), TestScopedComponent.class);
     factory.buildWorld();
@@ -165,12 +145,11 @@ class DaggerObjectFactoryTest {
   }
 
   @Test
-  void getInstance_prefersScopedOverRoot_whenTypeIsOnBoth() {
+  void getInstancePrefersScopedOverRootWhenTypeIsOnBoth() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
     factory.configure(new TestRootComponentImpl(), TestScopedComponent.class);
     factory.buildWorld();
 
-    // StepDef is in the scoped component — should come from there even if root also had it
     StepDef instance = factory.getInstance(StepDef.class);
 
     assertThat(instance).isNotNull();
@@ -178,7 +157,7 @@ class DaggerObjectFactoryTest {
   }
 
   @Test
-  void getInstance_returnsRootInstance_whenTypeIsOnlyOnRootComponent() {
+  void getInstanceReturnsRootInstanceWhenTypeIsOnlyOnRootComponent() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
     factory.configure(new TestRootComponentImpl(), TestScopedComponent.class);
     factory.buildWorld();
@@ -190,7 +169,7 @@ class DaggerObjectFactoryTest {
   }
 
   @Test
-  void getInstance_cachesRootInstanceWithinScenario() {
+  void getInstanceCachesRootInstanceWithinScenario() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
     factory.configure(new TestRootComponentImpl(), TestScopedComponent.class);
     factory.buildWorld();
@@ -203,7 +182,7 @@ class DaggerObjectFactoryTest {
   }
 
   @Test
-  void getInstance_throwsForUnknownType() {
+  void getInstanceThrowsForUnknownType() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
     factory.configure(new TestRootComponentImpl(), TestScopedComponent.class);
     factory.buildWorld();
@@ -214,12 +193,8 @@ class DaggerObjectFactoryTest {
     factory.disposeWorld();
   }
 
-  // ---------------------------------------------------------------------------
-  // disposeWorld
-  // ---------------------------------------------------------------------------
-
   @Test
-  void disposeWorld_clearsCachedInstances() {
+  void disposeWorldClearsCachedInstances() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
     factory.configure(new TestRootComponentImpl(), TestScopedComponent.class);
 
@@ -235,13 +210,12 @@ class DaggerObjectFactoryTest {
   }
 
   @Test
-  void disposeWorld_clearsScopedSuppliers() {
+  void disposeWorldClearsScopedSuppliers() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
     factory.configure(new TestRootComponentImpl(), TestScopedComponent.class);
     factory.buildWorld();
     factory.disposeWorld();
 
-    // After disposeWorld, no world is active — next buildWorld must be called before getInstance
     assertThatThrownBy(() -> factory.getInstance(StepDef.class))
         .isInstanceOf(IllegalStateException.class);
   }

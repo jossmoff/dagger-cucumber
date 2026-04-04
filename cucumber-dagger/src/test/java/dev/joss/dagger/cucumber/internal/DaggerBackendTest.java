@@ -30,7 +30,7 @@ class DaggerBackendTest {
   // ---------------------------------------------------------------------------
 
   @Test
-  void getSnippet_returnsNull() {
+  void getSnippetReturnsNull() {
     DaggerBackend backend =
         new DaggerBackend(
             null, mock(Container.class), Thread.currentThread()::getContextClassLoader);
@@ -43,7 +43,7 @@ class DaggerBackendTest {
   // ---------------------------------------------------------------------------
 
   @Test
-  void buildWorld_delegatesToRegisteredFactory() {
+  void buildWorldDelegatesToRegisteredFactory() {
     DaggerObjectFactory mockFactory = mock(DaggerObjectFactory.class);
     ObjectFactoryHolder.register(mockFactory);
     DaggerBackend backend =
@@ -56,7 +56,7 @@ class DaggerBackendTest {
   }
 
   @Test
-  void disposeWorld_delegatesToRegisteredFactory() {
+  void disposeWorldDelegatesToRegisteredFactory() {
     DaggerObjectFactory mockFactory = mock(DaggerObjectFactory.class);
     ObjectFactoryHolder.register(mockFactory);
     DaggerBackend backend =
@@ -73,7 +73,7 @@ class DaggerBackendTest {
   // ---------------------------------------------------------------------------
 
   @Test
-  void loadGlue_throwsWhenServiceFileIsAbsent() throws Exception {
+  void loadGlueThrowsWhenServiceFileIsAbsent() throws Exception {
     URLClassLoader emptyLoader = new URLClassLoader(new URL[0], null);
     DaggerBackend backend = new DaggerBackend(null, mock(Container.class), () -> emptyLoader);
 
@@ -83,7 +83,7 @@ class DaggerBackendTest {
   }
 
   @Test
-  void loadGlue_throwsWhenServiceFileHasMultipleEntries(@TempDir Path tempDir) throws IOException {
+  void loadGlueThrowsWhenServiceFileHasMultipleEntries(@TempDir Path tempDir) throws IOException {
     writeServiceFile(tempDir, "com.example.FirstFactory", "com.example.SecondFactory");
     URLClassLoader loader = new URLClassLoader(new URL[] {tempDir.toUri().toURL()}, null);
     DaggerBackend backend = new DaggerBackend(null, mock(Container.class), () -> loader);
@@ -94,7 +94,7 @@ class DaggerBackendTest {
   }
 
   @Test
-  void loadGlue_throwsWhenFactoryClassNotFound(@TempDir Path tempDir) throws IOException {
+  void loadGlueThrowsWhenFactoryClassNotFound(@TempDir Path tempDir) throws IOException {
     writeServiceFile(tempDir, "com.example.NonExistentDaggerFactory");
     URLClassLoader loader = new URLClassLoader(new URL[] {tempDir.toUri().toURL()}, null);
     DaggerBackend backend = new DaggerBackend(null, mock(Container.class), () -> loader);
@@ -105,7 +105,7 @@ class DaggerBackendTest {
   }
 
   @Test
-  void loadGlue_throwsWhenServiceFileHasOnlyBlankLinesAndComments(@TempDir Path tempDir)
+  void loadGlueThrowsWhenServiceFileHasOnlyBlankLinesAndComments(@TempDir Path tempDir)
       throws IOException {
     writeServiceFile(tempDir, "# this is a comment", "  ", "");
     URLClassLoader loader = new URLClassLoader(new URL[] {tempDir.toUri().toURL()}, null);

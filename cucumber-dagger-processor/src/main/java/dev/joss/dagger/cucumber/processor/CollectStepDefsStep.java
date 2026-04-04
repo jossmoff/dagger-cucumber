@@ -44,7 +44,7 @@ final class CollectStepDefsStep
     CollectedStepDefs result =
         new CollectedStepDefs(
             input.rootComponent(), input.rootPackage(), input.scopedClasses(), stepDefMethods);
-    return StepResult.success(result);
+    return StepResult.succeeded(result);
   }
 
   private static boolean isConstructor(Element element) {

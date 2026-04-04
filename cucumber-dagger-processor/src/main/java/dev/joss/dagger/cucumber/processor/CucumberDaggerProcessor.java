@@ -89,7 +89,7 @@ public final class CucumberDaggerProcessor extends AbstractProcessor {
             .pipe(new BuildProcessingModelStep())
             .result();
 
-    if (!result.isHalt()) {
+    if (!result.isFailed()) {
       generator.generate(result.value());
     }
     return false;

@@ -8,33 +8,33 @@ import org.junit.jupiter.api.Test;
 class StepResultTest {
 
   @Test
-  void success_isNotHalt() {
-    StepResult<String> result = StepResult.success("hello");
-    assertThat(result.isHalt()).isFalse();
+  void succeededIsNotFailed() {
+    StepResult<String> result = StepResult.succeeded("hello");
+    assertThat(result.isFailed()).isFalse();
   }
 
   @Test
-  void success_returnsValue() {
-    StepResult<String> result = StepResult.success("hello");
+  void succeededReturnsValue() {
+    StepResult<String> result = StepResult.succeeded("hello");
     assertThat(result.value()).isEqualTo("hello");
   }
 
   @Test
-  void success_nullValue_isAllowed() {
-    StepResult<String> result = StepResult.success(null);
-    assertThat(result.isHalt()).isFalse();
+  void succeededNullValueIsAllowed() {
+    StepResult<String> result = StepResult.succeeded(null);
+    assertThat(result.isFailed()).isFalse();
     assertThat(result.value()).isNull();
   }
 
   @Test
-  void halt_isHalt() {
-    StepResult<String> result = StepResult.halt();
-    assertThat(result.isHalt()).isTrue();
+  void failedIsFailed() {
+    StepResult<String> result = StepResult.failed();
+    assertThat(result.isFailed()).isTrue();
   }
 
   @Test
-  void halt_value_throwsIllegalStateException() {
-    StepResult<String> result = StepResult.halt();
+  void failedValueThrowsIllegalStateException() {
+    StepResult<String> result = StepResult.failed();
     assertThatThrownBy(result::value).isInstanceOf(IllegalStateException.class);
   }
 }

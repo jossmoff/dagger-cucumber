@@ -14,12 +14,8 @@ import org.junit.jupiter.api.Test;
 
 class BuildProcessingModelStepTest {
 
-  // ---------------------------------------------------------------------------
-  // Happy paths
-  // ---------------------------------------------------------------------------
-
   @Test
-  void noUserModules_producesModelWithEmptyCollections() {
+  void noUserModulesProducesModelWithEmptyCollections() {
     AtomicReference<StepResult<ProcessingModel>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -41,7 +37,7 @@ class BuildProcessingModelStepTest {
                 "public interface AppComponent {}"));
 
     assertThat(compilation).succeeded();
-    assertThat(captured.get().isHalt()).isFalse();
+    assertThat(captured.get().isFailed()).isFalse();
     ProcessingModel model = captured.get().value();
     assertThat(model.userModules()).isEmpty();
     assertThat(model.userScopedModules()).isEmpty();
@@ -50,7 +46,7 @@ class BuildProcessingModelStepTest {
   }
 
   @Test
-  void scopeAnnotationOnRoot_copiedToModel() {
+  void scopeAnnotationOnRootCopiedToModel() {
     AtomicReference<StepResult<ProcessingModel>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -74,14 +70,14 @@ class BuildProcessingModelStepTest {
                 "public interface AppComponent {}"));
 
     assertThat(compilation).succeeded();
-    assertThat(captured.get().isHalt()).isFalse();
+    assertThat(captured.get().isFailed()).isFalse();
     assertThat(captured.get().value().scopeAnnotations()).hasSize(1);
     assertThat(captured.get().value().scopeAnnotations().getFirst().getAnnotationType().toString())
         .isEqualTo("jakarta.inject.Singleton");
   }
 
   @Test
-  void styleAClass_addsProvisionMethodToModel() {
+  void styleAClassAddsProvisionMethodToModel() {
     AtomicReference<StepResult<ProcessingModel>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -114,13 +110,13 @@ class BuildProcessingModelStepTest {
                 "}"));
 
     assertThat(compilation).succeeded();
-    assertThat(captured.get().isHalt()).isFalse();
+    assertThat(captured.get().isFailed()).isFalse();
     assertThat(captured.get().value().scopedProvisionMethods().values())
         .containsExactly("myScoped");
   }
 
   @Test
-  void userModuleWithStyleBMethod_addedToScopedModules() {
+  void userModuleWithStyleBMethodAddedToScopedModules() {
     AtomicReference<StepResult<ProcessingModel>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -155,7 +151,7 @@ class BuildProcessingModelStepTest {
                 "public interface AppComponent {}"));
 
     assertThat(compilation).succeeded();
-    assertThat(captured.get().isHalt()).isFalse();
+    assertThat(captured.get().isFailed()).isFalse();
     ProcessingModel model = captured.get().value();
     assertThat(model.userScopedModules()).hasSize(1);
     assertThat(model.userScopedModules().getFirst().getSimpleName().toString())
@@ -163,12 +159,8 @@ class BuildProcessingModelStepTest {
     assertThat(model.scopedProvisionMethods().values()).containsExactly("someService");
   }
 
-  // ---------------------------------------------------------------------------
-  // Validation errors
-  // ---------------------------------------------------------------------------
-
   @Test
-  void qualifiedStyleBMethod_haltsAndEmitsError() {
+  void qualifiedStyleBMethodHaltsAndEmitsError() {
     AtomicReference<StepResult<ProcessingModel>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -206,6 +198,6 @@ class BuildProcessingModelStepTest {
     assertThat(compilation)
         .hadErrorContaining(
             "Qualified @CucumberScoped provider methods are not currently supported");
-    assertThat(captured.get().isHalt()).isTrue();
+    assertThat(captured.get().isFailed()).isTrue();
   }
 }

@@ -17,7 +17,7 @@ class DaggerBackendProviderServiceTest {
   }
 
   @Test
-  void create_returnsDaggerBackendInstance() {
+  void createReturnsDaggerBackendInstance() {
     DaggerBackendProviderService service = new DaggerBackendProviderService();
 
     Backend backend =
@@ -30,7 +30,7 @@ class DaggerBackendProviderServiceTest {
   }
 
   @Test
-  void create_returnsNewInstanceOnEachCall() {
+  void createReturnsNewInstanceOnEachCall() {
     DaggerBackendProviderService service = new DaggerBackendProviderService();
 
     Backend first =

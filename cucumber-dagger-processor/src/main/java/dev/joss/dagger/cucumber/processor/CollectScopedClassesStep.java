@@ -34,7 +34,7 @@ final class CollectScopedClassesStep
       ProcessingContext ctx, FoundRootComponent input) {
 
     if (ctx.knownTypes.cucumberScoped == null) {
-      return StepResult.success(
+      return StepResult.succeeded(
           new CollectedScopedClasses(input.rootComponent(), input.rootPackage(), List.of()));
     }
 
@@ -79,8 +79,8 @@ final class CollectScopedClassesStep
       }
     }
 
-    if (hasErrors) return StepResult.halt();
-    return StepResult.success(
+    if (hasErrors) return StepResult.failed();
+    return StepResult.succeeded(
         new CollectedScopedClasses(input.rootComponent(), input.rootPackage(), scopedClasses));
   }
 

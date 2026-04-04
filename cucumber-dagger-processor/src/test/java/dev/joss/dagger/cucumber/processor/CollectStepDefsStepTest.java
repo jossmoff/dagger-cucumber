@@ -24,12 +24,8 @@ class CollectStepDefsStepTest {
           "@Component(modules = {})",
           "public interface AppComponent {}");
 
-  // ---------------------------------------------------------------------------
-  // Happy paths
-  // ---------------------------------------------------------------------------
-
   @Test
-  void injectConstructorInGluePackage_includedAsStepDef() {
+  void injectConstructorInGluePackageIncludedAsStepDef() {
     AtomicReference<StepResult<CollectedStepDefs>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -50,13 +46,13 @@ class CollectStepDefsStepTest {
                 "}"));
 
     assertThat(compilation).succeeded();
-    assertThat(captured.get().isHalt()).isFalse();
+    assertThat(captured.get().isFailed()).isFalse();
     assertThat(captured.get().value().stepDefMethods()).hasSize(1);
     assertThat(captured.get().value().stepDefMethods().values()).containsExactly("mySteps");
   }
 
   @Test
-  void injectConstructorOutsideGluePackage_excluded() {
+  void injectConstructorOutsideGluePackageExcluded() {
     AtomicReference<StepResult<CollectedStepDefs>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -77,12 +73,12 @@ class CollectStepDefsStepTest {
                 "}"));
 
     assertThat(compilation).succeeded();
-    assertThat(captured.get().isHalt()).isFalse();
+    assertThat(captured.get().isFailed()).isFalse();
     assertThat(captured.get().value().stepDefMethods()).isEmpty();
   }
 
   @Test
-  void injectConstructorOfScopedClass_excluded() {
+  void injectConstructorOfScopedClassExcluded() {
     AtomicReference<StepResult<CollectedStepDefs>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -108,12 +104,12 @@ class CollectStepDefsStepTest {
                 "}"));
 
     assertThat(compilation).succeeded();
-    assertThat(captured.get().isHalt()).isFalse();
+    assertThat(captured.get().isFailed()).isFalse();
     assertThat(captured.get().value().stepDefMethods()).isEmpty();
   }
 
   @Test
-  void noInjectAnnotatedElements_returnsEmptyStepDefs() {
+  void noInjectAnnotatedElementsReturnsEmptyStepDefs() {
     AtomicReference<StepResult<CollectedStepDefs>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -127,7 +123,7 @@ class CollectStepDefsStepTest {
             APP_COMPONENT);
 
     assertThat(compilation).succeeded();
-    assertThat(captured.get().isHalt()).isFalse();
+    assertThat(captured.get().isFailed()).isFalse();
     assertThat(captured.get().value().stepDefMethods()).isEmpty();
   }
 }

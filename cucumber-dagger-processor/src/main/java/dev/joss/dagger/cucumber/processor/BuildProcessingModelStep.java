@@ -90,13 +90,13 @@ final class BuildProcessingModelStep
       if (isUserScopedModule) userScopedModules.add(moduleElement);
     }
 
-    if (hasErrors) return StepResult.halt();
+    if (hasErrors) return StepResult.failed();
 
     List<AnnotationMirror> scopeAnnotations =
         ctx.annotationUtils.findMetaAnnotated(
             input.rootComponent().getAnnotationMirrors(), ctx.knownTypes.jakartaScope);
 
-    return StepResult.success(
+    return StepResult.succeeded(
         new ProcessingModel(
             input.rootComponent(),
             input.rootPackage(),

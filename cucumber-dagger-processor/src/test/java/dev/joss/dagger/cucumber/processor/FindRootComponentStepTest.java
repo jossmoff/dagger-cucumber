@@ -36,18 +36,14 @@ class FindRootComponentStepTest {
                 "public interface AppComponent {}"));
 
     assertThat(compilation).succeeded();
-    assertThat(captured.get().isHalt()).isFalse();
+    assertThat(captured.get().isFailed()).isFalse();
     assertThat(captured.get().value().rootPackage()).isEqualTo("test");
     assertThat(captured.get().value().rootComponent().getSimpleName().toString())
         .isEqualTo("AppComponent");
   }
 
-  // ---------------------------------------------------------------------------
-  // Multiple annotated elements
-  // ---------------------------------------------------------------------------
-
   @Test
-  void multipleAnnotatedElements_haltsAndEmitsError() {
+  void multipleAnnotatedElementsHaltsAndEmitsError() {
     AtomicReference<StepResult<FoundRootComponent>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -75,7 +71,7 @@ class FindRootComponentStepTest {
                 "public interface Second {}"));
 
     assertThat(compilation).hadErrorContaining("Only one @CucumberDaggerConfiguration is allowed");
-    assertThat(captured.get().isHalt()).isTrue();
+    assertThat(captured.get().isFailed()).isTrue();
   }
 
   @Test
@@ -100,6 +96,6 @@ class FindRootComponentStepTest {
 
     assertThat(compilation)
         .hadErrorContaining("@CucumberDaggerConfiguration can only be applied to interfaces");
-    assertThat(captured.get().isHalt()).isTrue();
+    assertThat(captured.get().isFailed()).isTrue();
   }
 }

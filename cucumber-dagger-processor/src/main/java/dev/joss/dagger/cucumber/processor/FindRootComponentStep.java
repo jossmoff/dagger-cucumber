@@ -30,7 +30,7 @@ final class FindRootComponentStep
     if (annotated.size() > 1) {
       ctx.messager()
           .printMessage(Diagnostic.Kind.ERROR, "Only one @CucumberDaggerConfiguration is allowed");
-      return StepResult.halt();
+      return StepResult.failed();
     }
 
     TypeElement root = (TypeElement) annotated.iterator().next();
@@ -41,11 +41,11 @@ final class FindRootComponentStep
               Diagnostic.Kind.ERROR,
               "@CucumberDaggerConfiguration can only be applied to interfaces",
               root);
-      return StepResult.halt();
+      return StepResult.failed();
     }
 
     String pkg =
         ctx.processingEnv.getElementUtils().getPackageOf(root).getQualifiedName().toString();
-    return StepResult.success(new FoundRootComponent(root, pkg));
+    return StepResult.succeeded(new FoundRootComponent(root, pkg));
   }
 }

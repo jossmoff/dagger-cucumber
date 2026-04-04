@@ -13,12 +13,8 @@ class CucumberDaggerProcessorTest {
     return javac().withProcessors(new CucumberDaggerProcessor()).compile(sources);
   }
 
-  // ---------------------------------------------------------------------------
-  // Happy-path
-  // ---------------------------------------------------------------------------
-
   @Test
-  void validRootComponent_generatesAllExpectedFiles() {
+  void validRootComponentGeneratesAllExpectedFiles() {
     Compilation compilation =
         compile(
             JavaFileObjects.forSourceLines(
@@ -40,7 +36,7 @@ class CucumberDaggerProcessorTest {
   }
 
   @Test
-  void singletonScopeAnnotation_copiedToGeneratedWrapper() {
+  void singletonScopeAnnotationCopiedToGeneratedWrapper() {
     Compilation compilation =
         compile(
             JavaFileObjects.forSourceLines(
@@ -62,7 +58,7 @@ class CucumberDaggerProcessorTest {
   }
 
   @Test
-  void userModules_includedInGeneratedWrapperComponent() {
+  void userModulesIncludedInGeneratedWrapperComponent() {
     Compilation compilation =
         compile(
             JavaFileObjects.forSourceLines(
@@ -92,7 +88,7 @@ class CucumberDaggerProcessorTest {
   }
 
   @Test
-  void styleAClass_generatesProvisionMethodInScopedComponent() {
+  void styleAClassGeneratesProvisionMethodInScopedComponent() {
     Compilation compilation =
         compile(
             JavaFileObjects.forSourceLines(
@@ -121,7 +117,7 @@ class CucumberDaggerProcessorTest {
   }
 
   @Test
-  void stepDefClass_generatesProvisionMethodInScopedComponent() {
+  void stepDefClassGeneratesProvisionMethodInScopedComponent() {
     Compilation compilation =
         compile(
             JavaFileObjects.forSourceLines(
@@ -147,12 +143,8 @@ class CucumberDaggerProcessorTest {
         .contains("MySteps mySteps()");
   }
 
-  // ---------------------------------------------------------------------------
-  // Validation errors
-  // ---------------------------------------------------------------------------
-
   @Test
-  void multipleRootComponents_emitsCompileError() {
+  void multipleRootComponentsEmitsCompileError() {
     Compilation compilation =
         compile(
             JavaFileObjects.forSourceLines(
@@ -177,7 +169,7 @@ class CucumberDaggerProcessorTest {
   }
 
   @Test
-  void rootOnClass_emitsCompileError() {
+  void rootOnClassEmitsCompileError() {
     Compilation compilation =
         compile(
             JavaFileObjects.forSourceLines(
@@ -193,7 +185,7 @@ class CucumberDaggerProcessorTest {
   }
 
   @Test
-  void cucumberScopedOnInterface_emitsCompileError() {
+  void cucumberScopedOnInterfaceEmitsCompileError() {
     Compilation compilation =
         compile(
             JavaFileObjects.forSourceLines(
@@ -216,7 +208,7 @@ class CucumberDaggerProcessorTest {
   }
 
   @Test
-  void cucumberScopedOnAbstractClass_emitsCompileError() {
+  void cucumberScopedOnAbstractClassEmitsCompileError() {
     Compilation compilation =
         compile(
             JavaFileObjects.forSourceLines(
@@ -239,7 +231,7 @@ class CucumberDaggerProcessorTest {
   }
 
   @Test
-  void cucumberScopedClassWithoutInjectConstructor_emitsCompileError() {
+  void cucumberScopedClassWithoutInjectConstructorEmitsCompileError() {
     Compilation compilation =
         compile(
             JavaFileObjects.forSourceLines(
@@ -262,7 +254,7 @@ class CucumberDaggerProcessorTest {
   }
 
   @Test
-  void qualifiedCucumberScopedProviderMethod_emitsCompileError() {
+  void qualifiedCucumberScopedProviderMethodEmitsCompileError() {
     Compilation compilation =
         compile(
             JavaFileObjects.forSourceLines(

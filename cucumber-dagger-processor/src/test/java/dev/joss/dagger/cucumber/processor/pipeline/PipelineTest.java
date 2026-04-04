@@ -6,30 +6,26 @@ import org.junit.jupiter.api.Test;
 
 class PipelineTest {
 
-  // ---------------------------------------------------------------------------
-  // Happy path — all steps succeed
-  // ---------------------------------------------------------------------------
-
   @Test
-  void singleStep_successfulStep_returnsStepOutput() {
+  void singleStepSuccessfulStepReturnsStepOutput() {
     StepResult<Integer> result =
         Pipeline.of("ctx", "hello")
-            .pipe((_ctx, input) -> StepResult.success(input.length()))
+            .pipe((_ctx, input) -> StepResult.succeeded(input.length()))
             .result();
 
-    assertThat(result.isHalt()).isFalse();
+    assertThat(result.isFailed()).isFalse();
     assertThat(result.value()).isEqualTo(5);
   }
 
   @Test
-  void multipleSteps_allSucceed_finalValueIsReturned() {
+  void multipleStepsAllSucceedFinalValueIsReturned() {
     StepResult<String> result =
         Pipeline.of("ctx", 1)
-            .pipe((_ctx, n) -> StepResult.success(n * 10))
-            .pipe((_ctx, n) -> StepResult.success("value=" + n))
+            .pipe((_ctx, n) -> StepResult.succeeded(n * 10))
+            .pipe((_ctx, n) -> StepResult.succeeded("value=" + n))
             .result();
 
-    assertThat(result.isHalt()).isFalse();
+    assertThat(result.isFailed()).isFalse();
     assertThat(result.value()).isEqualTo("value=10");
   }
 
@@ -42,40 +38,35 @@ class PipelineTest {
             .pipe(
                 (ctx, n) -> {
                   capturedCtx[0] = ctx;
-                  return StepResult.success(n + 1);
+                  return StepResult.succeeded(n + 1);
                 })
             .pipe(
                 (ctx, n) -> {
                   capturedCtx[1] = ctx;
-                  return StepResult.success(n + 1);
+                  return StepResult.succeeded(n + 1);
                 })
             .result();
 
-    assertThat(result.isHalt()).isFalse();
+    assertThat(result.isFailed()).isFalse();
 
-    assertThat(capturedCtx[0]).isEqualTo("myCtx");
-    assertThat(capturedCtx[1]).isEqualTo("myCtx");
+    assertThat(capturedCtx).containsExactly("myCtx", "myCtx");
   }
 
-  // ---------------------------------------------------------------------------
-  // Short-circuit — halt propagation
-  // ---------------------------------------------------------------------------
-
   @Test
-  void haltingStep_downstreamStepsAreNotInvoked() {
+  void haltingStepDownstreamStepsAreNotInvoked() {
     boolean[] invoked = {false};
 
     StepResult<Integer> result =
         Pipeline.of("ctx", "input")
-            .pipe((_ctx, _input) -> StepResult.halt())
+            .pipe((_ctx, _input) -> StepResult.failed())
             .pipe(
                 (_ctx, _input) -> {
                   invoked[0] = true;
-                  return StepResult.success(42);
+                  return StepResult.succeeded(42);
                 })
             .result();
 
-    assertThat(result.isHalt()).isTrue();
+    assertThat(result.isFailed()).isTrue();
     assertThat(invoked[0]).isFalse();
   }
 
@@ -85,31 +76,27 @@ class PipelineTest {
 
     StepResult<String> result =
         Pipeline.of("ctx", "start")
-            .pipe((_ctx, _input) -> StepResult.<String>halt())
+            .pipe((_ctx, _input) -> StepResult.<String>failed())
             .pipe(
                 (_ctx, _input) -> {
                   invokedCount[0]++;
-                  return StepResult.success("a");
+                  return StepResult.succeeded("a");
                 })
             .pipe(
                 (_ctx, _input) -> {
                   invokedCount[0]++;
-                  return StepResult.success("b");
+                  return StepResult.succeeded("b");
                 })
             .result();
 
-    assertThat(result.isHalt()).isTrue();
+    assertThat(result.isFailed()).isTrue();
     assertThat(invokedCount[0]).isZero();
   }
 
-  // ---------------------------------------------------------------------------
-  // Edge cases
-  // ---------------------------------------------------------------------------
-
   @Test
-  void of_wrapsInputInSuccess() {
+  void ofWrapsInputInSuccess() {
     StepResult<String> result = Pipeline.of("ctx", "hello").result();
-    assertThat(result.isHalt()).isFalse();
+    assertThat(result.isFailed()).isFalse();
     assertThat(result.value()).isEqualTo("hello");
   }
 }
