@@ -83,8 +83,7 @@ final class BuildProcessingModelStep
         String methodName =
             returnTypeElement != null
                 ? NamingStrategy.provisionMethodName(returnTypeElement)
-                : NamingStrategy.decapitalize(
-                    method.getReturnType().toString().replaceAll(".*\\.", ""));
+                : method.getSimpleName().toString();
         scopedProvisionMethods.putIfAbsent(returnTypeName, methodName);
       }
       if (isUserScopedModule) userScopedModules.add(moduleElement);

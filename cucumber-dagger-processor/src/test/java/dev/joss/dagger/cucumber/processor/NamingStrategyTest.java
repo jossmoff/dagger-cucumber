@@ -29,7 +29,7 @@ class NamingStrategyTest {
 
   @ParameterizedTest
   @MethodSource("provideClassNamesWithExpectedConversion")
-  void provisionMethodNameWithCorrectlyConverts(String className, String expectedMethodName) {
+  void provisionMethodNameCorrectlyConverts(String className, String expectedMethodName) {
     when(name.toString()).thenReturn(className);
     when(typeElement.getSimpleName()).thenReturn(name);
     assertThat(NamingStrategy.provisionMethodName(typeElement)).isEqualTo(expectedMethodName);

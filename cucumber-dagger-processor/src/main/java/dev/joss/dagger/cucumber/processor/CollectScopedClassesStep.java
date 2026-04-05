@@ -43,7 +43,14 @@ final class CollectScopedClassesStep
     List<Element> annotatedElements =
         new ArrayList<>(ctx.roundEnv.getElementsAnnotatedWith(ctx.knownTypes.cucumberScoped));
 
-    for (Element element : annotatedElements) {
+    // Filter to glue package first — elements outside the glue package are silently ignored.
+    List<Element> glueElements =
+        annotatedElements.stream()
+            .filter(e -> isClass(e) || isInterface(e))
+            .filter(e -> isInGluePackage(asTypeElement(e), ctx, input))
+            .collect(Collectors.toList());
+
+    for (Element element : glueElements) {
       if (isInvalidScopedTarget(element)) {
         ctx.messager()
             .printMessage(
@@ -55,10 +62,9 @@ final class CollectScopedClassesStep
     }
 
     List<TypeElement> scopedClasses =
-        annotatedElements.stream()
+        glueElements.stream()
             .filter(CollectScopedClassesStep::isClass)
             .map(CollectScopedClassesStep::asTypeElement)
-            .filter(type -> isInGluePackage(type, ctx, input))
             .collect(Collectors.toList());
 
     // Validate @Inject constructor presence for all collected classes in one pass so all errors are
