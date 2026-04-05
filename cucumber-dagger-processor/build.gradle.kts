@@ -16,7 +16,7 @@ dependencies {
 
     testImplementation(project(":cucumber-dagger"))
     testImplementation("com.google.testing.compile:compile-testing:0.21.0")
-    testImplementation(platform("org.junit:junit-bom:5.10.3"))
+    testImplementation(platform("org.junit:junit-bom:6.0.3"))
     testImplementation("org.mockito:mockito-junit-jupiter:5.23.0")
     testImplementation("org.assertj:assertj-core:3.27.7")
     testImplementation("org.junit.jupiter:junit-jupiter")
