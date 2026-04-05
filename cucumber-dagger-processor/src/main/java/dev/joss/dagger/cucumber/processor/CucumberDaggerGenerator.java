@@ -94,9 +94,9 @@ final class CucumberDaggerGenerator {
         ClassName.get(model.rootPackage(), "GeneratedScopedModule");
     ClassName generatedScopedComponentName =
         ClassName.get(model.rootPackage(), "GeneratedScopedComponent");
-    ClassName cucumberScopedComponentName = ClassName.get(API_PKG, "ScenarioScopedComponent");
+    ClassName scenarioScopedComponentName = ClassName.get(API_PKG, "ScenarioScopedComponent");
 
-    AnnotationSpec cucumberScopedAnnotation =
+    AnnotationSpec scenarioScopedAnnotation =
         AnnotationSpec.builder(ClassName.get(API_PKG, "ScenarioScoped")).build();
     AnnotationSpec subcomponentAnnotation =
         AnnotationSpec.builder(ClassName.get("dagger", "Subcomponent"))
@@ -106,9 +106,9 @@ final class CucumberDaggerGenerator {
     TypeSpec.Builder componentBuilder =
         TypeSpec.interfaceBuilder("GeneratedScopedComponent")
             .addModifiers(Modifier.PUBLIC)
-            .addAnnotation(cucumberScopedAnnotation)
+            .addAnnotation(scenarioScopedAnnotation)
             .addAnnotation(subcomponentAnnotation)
-            .addSuperinterface(cucumberScopedComponentName);
+            .addSuperinterface(scenarioScopedComponentName);
 
     for (Map.Entry<TypeName, String> entry : model.scopedProvisionMethods().entrySet()) {
       componentBuilder.addMethod(
@@ -130,6 +130,7 @@ final class CucumberDaggerGenerator {
         ParameterizedTypeName.get(
             ClassName.get(API_PKG, "ScenarioScopedComponent", "Builder"),
             generatedScopedComponentName);
+
     TypeSpec builderInterface =
         TypeSpec.interfaceBuilder("Builder")
             .addAnnotation(ClassName.get("dagger", "Subcomponent", "Builder"))
@@ -152,7 +153,7 @@ final class CucumberDaggerGenerator {
         ClassName.get(model.rootPackage(), "GeneratedScopedComponent");
     ClassName generatedScopedBuilderName =
         ClassName.get(model.rootPackage(), "GeneratedScopedComponent", "Builder");
-    ClassName cucumberScopedBuilderName =
+    ClassName scenarioScopedBuilderName =
         ClassName.get(API_PKG, "ScenarioScopedComponent", "Builder");
 
     AnnotationSpec moduleAnnotation =
@@ -168,7 +169,7 @@ final class CucumberDaggerGenerator {
             .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
             .addAnnotation(ClassName.get("dagger", "Provides"))
             .addAnnotation(suppressWarnings)
-            .returns(cucumberScopedBuilderName)
+            .returns(scenarioScopedBuilderName)
             .addParameter(generatedScopedBuilderName, "builder")
             .addStatement("return builder")
             .build();
@@ -194,13 +195,13 @@ final class CucumberDaggerGenerator {
    * startup.
    */
   private void generateScenarioScopedComponentAccessor(ProcessingModel model) {
-    ClassName cucumberScopedComponentName = ClassName.get(API_PKG, "ScenarioScopedComponent");
+    ClassName scenarioScopedComponentName = ClassName.get(API_PKG, "ScenarioScopedComponent");
     ClassName generatedScopedComponentName =
         ClassName.get(model.rootPackage(), "GeneratedScopedComponent");
 
     ParameterizedTypeName returnType =
         ParameterizedTypeName.get(
-            ClassName.get(Class.class), WildcardTypeName.subtypeOf(cucumberScopedComponentName));
+            ClassName.get(Class.class), WildcardTypeName.subtypeOf(scenarioScopedComponentName));
 
     MethodSpec method =
         MethodSpec.methodBuilder("getScopedComponentClass")

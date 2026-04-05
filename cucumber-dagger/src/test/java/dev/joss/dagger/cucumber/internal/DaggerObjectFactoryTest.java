@@ -28,7 +28,11 @@ class DaggerObjectFactoryTest {
 
   public interface TestRootComponent extends CucumberDaggerComponent {
     RootService rootService();
+
+    StepDef stepDef();
   }
+
+  public static final StepDef ROOT_STEP_DEF = new StepDef();
 
   public static class TestScopedComponentImpl implements TestScopedComponent {
     @Override
@@ -60,6 +64,11 @@ class DaggerObjectFactoryTest {
     @Override
     public RootService rootService() {
       return new RootService();
+    }
+
+    @Override
+    public StepDef stepDef() {
+      return ROOT_STEP_DEF;
     }
   }
 
@@ -152,7 +161,9 @@ class DaggerObjectFactoryTest {
 
     StepDef instance = factory.getInstance(StepDef.class);
 
-    assertThat(instance).isNotNull();
+    // StepDef is on both root (returns ROOT_STEP_DEF sentinel) and scoped component; the scoped
+    // binding must win, so the returned instance must not be the root sentinel.
+    assertThat(instance).isNotNull().isNotSameAs(ROOT_STEP_DEF);
     factory.disposeWorld();
   }
 
@@ -216,7 +227,8 @@ class DaggerObjectFactoryTest {
     factory.buildWorld();
     factory.disposeWorld();
 
-    assertThatThrownBy(() -> factory.getInstance(StepDef.class))
+    // ScopedObject is only on the scoped component, so after disposeWorld() it must not resolve.
+    assertThatThrownBy(() -> factory.getInstance(ScopedObject.class))
         .isInstanceOf(IllegalStateException.class);
   }
 }

@@ -64,6 +64,8 @@ public final class DaggerObjectFactory implements ObjectFactory {
   void configure(
       CucumberDaggerComponent root, Class<? extends ScenarioScopedComponent> scopedInterface) {
     this.rootComponent = root;
+    rootHandles.clear();
+    scopedHandles.clear();
     MethodHandles.Lookup lookup = MethodHandles.lookup();
 
     Class<?> rootInterface =

@@ -48,6 +48,8 @@ final class StepTestSupport {
 
   private static Processor capturingProcessor(ContextConsumer consumer) {
     return new AbstractProcessor() {
+      private boolean consumed = false;
+
       @Override
       public Set<String> getSupportedAnnotationTypes() {
         return Set.of("*");
@@ -61,6 +63,8 @@ final class StepTestSupport {
       @Override
       public boolean process(Set<? extends TypeElement> _annotations, RoundEnvironment roundEnv) {
         if (roundEnv.processingOver()) return false;
+        if (consumed) return false;
+        consumed = true;
         KnownTypes kt = new KnownTypes(processingEnv);
         AnnotationUtils au = new AnnotationUtils(processingEnv);
         ProcessingContext ctx = new ProcessingContext(processingEnv, roundEnv, kt, au);

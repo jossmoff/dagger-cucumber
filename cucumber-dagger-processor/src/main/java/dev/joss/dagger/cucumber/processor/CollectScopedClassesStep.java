@@ -18,13 +18,15 @@ import javax.tools.Diagnostic;
  * <p>Validation rules (all errors are accumulated before halting):
  *
  * <ul>
- *   <li>Interfaces and abstract classes may not be annotated with {@code @ScenarioScoped}.
+ *   <li>Interfaces, abstract classes, and enums may not be annotated with {@code @ScenarioScoped};
+ *       this is checked for all annotated type elements regardless of package.
  *   <li>Every concrete {@code @ScenarioScoped} class must declare an {@code @Inject} constructor so
  *       Dagger can create it inside the generated scoped subcomponent.
  * </ul>
  *
- * <p>Elements outside the glue package ({@link FoundRootComponent#rootPackage()} or any
- * sub-package) are silently ignored.
+ * <p>Methods annotated with {@code @ScenarioScoped} (Style B) are handled by {@link
+ * BuildProcessingModelStep} and are not processed here. Concrete classes outside the glue package
+ * are silently ignored.
  */
 final class CollectScopedClassesStep
     implements ProcessingStep<ProcessingContext, FoundRootComponent, CollectedScopedClasses> {
@@ -43,28 +45,31 @@ final class CollectScopedClassesStep
     List<Element> annotatedElements =
         new ArrayList<>(ctx.roundEnv.getElementsAnnotatedWith(ctx.knownTypes.scenarioScoped));
 
-    // Filter to glue package first — elements outside the glue package are silently ignored.
-    List<Element> glueElements =
+    // Validate ALL non-method type elements regardless of package — invalid type targets such as
+    // interfaces, abstract classes, and enums should be reported wherever they appear, not silently
+    // ignored just because they are outside the glue package.
+    List<Element> typeElements =
         annotatedElements.stream()
-            .filter(e -> isClass(e) || isInterface(e))
-            .filter(e -> isInGluePackage(asTypeElement(e), ctx, input))
+            .filter(e -> e.getKind() != ElementKind.METHOD)
             .collect(Collectors.toList());
 
-    for (Element element : glueElements) {
+    for (Element element : typeElements) {
       if (isInvalidScopedTarget(element)) {
         ctx.messager()
             .printMessage(
                 Diagnostic.Kind.ERROR,
-                "@ScenarioScoped can only be applied to concrete classes",
+                "@ScenarioScoped can only be applied to concrete classes or @Provides methods",
                 element);
         hasErrors = true;
       }
     }
 
+    // Collect concrete classes from the glue package only.
     List<TypeElement> scopedClasses =
-        glueElements.stream()
-            .filter(CollectScopedClassesStep::isClass)
+        typeElements.stream()
+            .filter(e -> isClass(e) && !isAbstractClass(e))
             .map(CollectScopedClassesStep::asTypeElement)
+            .filter(type -> isInGluePackage(type, ctx, input))
             .collect(Collectors.toList());
 
     // Validate @Inject constructor presence for all collected classes in one pass so all errors are
@@ -91,7 +96,11 @@ final class CollectScopedClassesStep
   }
 
   private static boolean isInvalidScopedTarget(Element element) {
-    return isInterface(element) || isAbstractClass(element);
+    return isInterface(element) || isAbstractClass(element) || isEnum(element);
+  }
+
+  private static boolean isEnum(Element element) {
+    return element.getKind() == ElementKind.ENUM;
   }
 
   private static boolean isInterface(Element element) {
