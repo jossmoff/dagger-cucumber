@@ -1,16 +1,13 @@
 package dev.joss.dagger.cucumber.api;
 
 /**
- * Marker interface that user-defined root Dagger components must extend to integrate with Cucumber.
+ * Marker interface extended by the processor-generated wrapper component to integrate with the
+ * cucumber-dagger runtime.
  *
- * <p>A typical declaration looks like:
- *
- * <pre>{@code
- * @CucumberDaggerConfiguration
- * @Singleton
- * @Component(modules = {CucumberDaggerModule.class})
- * public interface AppComponent extends CucumberDaggerComponent {}
- * }</pre>
+ * <p>User-defined components annotated with {@link CucumberDaggerConfiguration} do <em>not</em>
+ * need to extend this interface. The annotation processor generates a wrapper component (e.g.
+ * {@code GeneratedCucumberAppComponent}) that extends {@code CucumberDaggerComponent} and includes
+ * the generated {@code CucumberDaggerModule} automatically.
  *
  * <p>The {@link #scopedComponentBuilder()} method is satisfied at runtime by Dagger using the
  * binding generated in {@code CucumberDaggerModule}. It returns a builder for the per-scenario

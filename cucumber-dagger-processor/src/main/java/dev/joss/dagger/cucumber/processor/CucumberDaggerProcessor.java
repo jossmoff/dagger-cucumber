@@ -52,6 +52,9 @@ import javax.lang.model.element.TypeElement;
 @SupportedAnnotationTypes("dev.joss.dagger.cucumber.api.CucumberDaggerConfiguration")
 public final class CucumberDaggerProcessor extends AbstractProcessor {
 
+  /** Creates a new {@code CucumberDaggerProcessor}. Required by the annotation-processor SPI. */
+  public CucumberDaggerProcessor() {}
+
   private KnownTypes knownTypes;
   private AnnotationUtils annotationUtils;
   private CucumberDaggerGenerator generator;

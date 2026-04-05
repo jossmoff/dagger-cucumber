@@ -8,7 +8,7 @@ package dev.joss.dagger.cucumber.processor.pipeline;
  *
  * <ul>
  *   <li>A <em>success</em> carrying the output value — the pipeline continues to the next step.
- *   <li>A <em>halt</em> — processing has failed and downstream steps must not run.
+ *   <li>A <em>failure</em> — processing has failed and downstream steps must not run.
  * </ul>
  *
  * <p>Making the context a type parameter keeps this interface free of any annotation-processing
@@ -20,5 +20,13 @@ package dev.joss.dagger.cucumber.processor.pipeline;
  */
 @FunctionalInterface
 public interface ProcessingStep<C, I, O> {
+  /**
+   * Executes this step.
+   *
+   * @param context the shared context threaded through the pipeline
+   * @param input the value produced by the previous step
+   * @return a {@link StepResult} carrying the output, or {@link StepResult#failed()} if processing
+   *     should stop
+   */
   StepResult<O> execute(C context, I input);
 }

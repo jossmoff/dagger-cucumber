@@ -15,7 +15,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -68,13 +68,13 @@ class DaggerBackend implements Backend {
     CucumberDaggerComponent component = loadComponent();
     Class<? extends CucumberScopedComponent> scopedInterface = resolveScopedInterface(gluePaths);
     container.addClass(component.getClass());
-    ObjectFactoryHolder.get().configure(component, scopedInterface);
+    getFactory().configure(component, scopedInterface);
   }
 
   /** Creates a fresh per-scenario Dagger subcomponent. Called before each scenario. */
   @Override
   public void buildWorld() {
-    ObjectFactoryHolder.get().buildWorld();
+    getFactory().buildWorld();
   }
 
   /**
@@ -82,7 +82,25 @@ class DaggerBackend implements Backend {
    */
   @Override
   public void disposeWorld() {
-    ObjectFactoryHolder.get().disposeWorld();
+    getFactory().disposeWorld();
+  }
+
+  /**
+   * Returns the registered {@link DaggerObjectFactory}, failing fast if none has been registered.
+   *
+   * @throws IllegalStateException if the {@code ObjectFactory} SPI has not been loaded — this
+   *     indicates the service-file entry is missing or Cucumber's service-loader did not run before
+   *     the backend lifecycle methods were called
+   */
+  private DaggerObjectFactory getFactory() {
+    DaggerObjectFactory factory = ObjectFactoryHolder.get();
+    if (factory == null) {
+      throw new IllegalStateException(
+          "DaggerObjectFactory has not been registered. "
+              + "Ensure the cucumber-dagger ObjectFactory SPI entry is on the classpath "
+              + "(META-INF/services/io.cucumber.core.backend.ObjectFactory).");
+    }
+    return factory;
   }
 
   /** Returns {@code null}; snippet generation is not supported by this backend. */
@@ -140,7 +158,7 @@ class DaggerBackend implements Backend {
       while (urls.hasMoreElements()) {
         URL url = urls.nextElement();
         try (BufferedReader reader =
-            new BufferedReader(new InputStreamReader(url.openStream(), Charset.defaultCharset()))) {
+            new BufferedReader(new InputStreamReader(url.openStream(), StandardCharsets.UTF_8))) {
           String line;
           while ((line = reader.readLine()) != null) {
             line = line.trim();
@@ -191,10 +209,8 @@ class DaggerBackend implements Backend {
       String packageName = path.replace('/', '.');
       List<Class<? extends CucumberScopedComponent>> found =
           classPathScanner.scanForSubClassesInPackage(packageName, CucumberScopedComponent.class);
-      for (Class<? extends CucumberScopedComponent> cls : found) {
-        if (!cls.isInterface()) {
-          return cls;
-        }
+      if (!found.isEmpty()) {
+        return found.get(0);
       }
     }
     throw new IllegalStateException(

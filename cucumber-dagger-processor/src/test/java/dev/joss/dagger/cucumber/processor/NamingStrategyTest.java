@@ -37,7 +37,7 @@ class NamingStrategyTest {
 
   @ParameterizedTest
   @MethodSource("provideClassNamesWithExpectedConversion")
-  void decapitalizeCorrectlyConverts() {
-    assertThat(NamingStrategy.decapitalize("")).isEmpty();
+  void decapitalizeCorrectlyConverts(String className, String expectedMethodName) {
+    assertThat(NamingStrategy.decapitalize(className)).isEqualTo(expectedMethodName);
   }
 }

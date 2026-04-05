@@ -6,6 +6,7 @@ import io.cucumber.core.backend.ObjectFactory;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -62,7 +63,19 @@ public final class DaggerObjectFactory implements ObjectFactory {
     this.rootComponent = root;
     MethodHandles.Lookup lookup = MethodHandles.lookup();
 
-    Class<?> rootInterface = root.getClass().getInterfaces()[0];
+    Class<?> rootInterface =
+        Arrays.stream(root.getClass().getInterfaces())
+            .filter(
+                i ->
+                    CucumberDaggerComponent.class.isAssignableFrom(i)
+                        && !i.equals(CucumberDaggerComponent.class))
+            .findFirst()
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "Root component "
+                            + root.getClass()
+                            + " does not implement a CucumberDaggerComponent sub-interface"));
     for (Method method : rootInterface.getMethods()) {
       if (method.getParameterCount() != 0) continue;
       if (method.getReturnType().equals(Void.TYPE)) continue;

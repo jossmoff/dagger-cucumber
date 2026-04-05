@@ -13,6 +13,9 @@ import java.util.function.Supplier;
  */
 public final class DaggerBackendProviderService implements BackendProviderService {
 
+  /** Creates a new {@code DaggerBackendProviderService}. */
+  public DaggerBackendProviderService() {}
+
   @Override
   public Backend create(
       Lookup lookup, Container container, Supplier<ClassLoader> classLoaderSupplier) {

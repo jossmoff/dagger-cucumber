@@ -11,7 +11,7 @@ package dev.joss.dagger.cucumber.internal;
  */
 class ObjectFactoryHolder {
 
-  private static DaggerObjectFactory instance;
+  private static volatile DaggerObjectFactory instance;
 
   /**
    * Registers {@code factory} as the active {@link DaggerObjectFactory}. Called by the {@link
