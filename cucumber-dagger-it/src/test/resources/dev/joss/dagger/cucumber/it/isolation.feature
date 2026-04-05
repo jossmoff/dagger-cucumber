@@ -1,6 +1,6 @@
 Feature: Scenario isolation
 
-  # The @CucumberScoped Basket starts empty in every scenario even though the
+  # The @ScenarioScoped Basket starts empty in every scenario even though the
   # singleton PriceList is shared across the whole test run.
   Scenario: Basket is empty at the start of each scenario
     Then my basket contains 0 items

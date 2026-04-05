@@ -61,7 +61,7 @@ final class BuildProcessingModelStep
         if (enclosed.getKind() != ElementKind.METHOD) continue;
         ExecutableElement method = (ExecutableElement) enclosed;
         if (!ctx.annotationUtils.hasAnnotation(method, ctx.knownTypes.daggerProvides)) continue;
-        if (!ctx.annotationUtils.hasAnnotation(method, ctx.knownTypes.cucumberScoped)) continue;
+        if (!ctx.annotationUtils.hasAnnotation(method, ctx.knownTypes.scenarioScoped)) continue;
 
         if (!ctx.annotationUtils
             .findMetaAnnotated(method.getAnnotationMirrors(), ctx.knownTypes.jakartaQualifier)

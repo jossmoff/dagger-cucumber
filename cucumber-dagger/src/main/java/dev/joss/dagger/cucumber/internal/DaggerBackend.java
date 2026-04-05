@@ -199,10 +199,10 @@ class DaggerBackend implements Backend {
   }
 
   /**
-   * Fallback: scans the given glue-path packages for a non-interface subclass of {@link
-   * ScenarioScopedComponent}.
+   * Fallback: scans the given glue-path packages for a type (class or interface) that extends
+   * {@link ScenarioScopedComponent}.
    *
-   * @throws IllegalStateException if no implementation is found in any of the glue paths
+   * @throws IllegalStateException if no such type is found in any of the glue paths
    */
   private Class<? extends ScenarioScopedComponent> scanForScopedComponent(List<URI> gluePaths) {
     for (URI uri : gluePaths) {
@@ -217,7 +217,7 @@ class DaggerBackend implements Backend {
       }
     }
     throw new IllegalStateException(
-        "No ScenarioScopedComponent implementation found in glue paths: "
+        "No ScenarioScopedComponent type found in glue paths: "
             + gluePaths
             + ". Please ensure cucumber-dagger-processor has run.");
   }

@@ -33,7 +33,7 @@ final class CollectScopedClassesStep
   public StepResult<CollectedScopedClasses> execute(
       ProcessingContext ctx, FoundRootComponent input) {
 
-    if (ctx.knownTypes.cucumberScoped == null) {
+    if (ctx.knownTypes.scenarioScoped == null) {
       return StepResult.succeeded(
           new CollectedScopedClasses(input.rootComponent(), input.rootPackage(), List.of()));
     }
@@ -41,7 +41,7 @@ final class CollectScopedClassesStep
     boolean hasErrors = false;
 
     List<Element> annotatedElements =
-        new ArrayList<>(ctx.roundEnv.getElementsAnnotatedWith(ctx.knownTypes.cucumberScoped));
+        new ArrayList<>(ctx.roundEnv.getElementsAnnotatedWith(ctx.knownTypes.scenarioScoped));
 
     // Filter to glue package first — elements outside the glue package are silently ignored.
     List<Element> glueElements =

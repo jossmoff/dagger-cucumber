@@ -142,8 +142,8 @@ public final class DaggerObjectFactory implements ObjectFactory {
     if (rootComponent == null) {
       throw new IllegalStateException(
           "The cucumber-dagger-processor has not run. "
-              + "Please add the annotationProcessor dependency and include "
-              + "CucumberDaggerModule in your @Component modules list.");
+              + "Please ensure the annotationProcessor dependency is configured "
+              + "and @CucumberDaggerConfiguration is present on your root component.");
     }
     ScenarioScopedComponent.Builder builder = rootComponent.scopedComponentBuilder();
     ScenarioScopedComponent scoped = builder.build();
