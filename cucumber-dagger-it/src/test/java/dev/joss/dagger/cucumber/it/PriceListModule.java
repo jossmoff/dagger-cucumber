@@ -7,8 +7,8 @@ import java.util.Map;
 
 /**
  * User-defined root module that provides a {@link PriceList} singleton. Listed in {@link
- * AppComponent}'s {@code modules} attribute; the generated wrapper adds {@code CucumberDaggerModule}
- * automatically.
+ * AppComponent}'s {@code modules} attribute; the generated wrapper adds {@code
+ * CucumberDaggerModule} automatically.
  */
 @Module
 public final class PriceListModule {

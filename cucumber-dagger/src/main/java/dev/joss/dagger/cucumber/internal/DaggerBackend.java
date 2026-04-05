@@ -202,23 +202,31 @@ class DaggerBackend implements Backend {
    * Fallback: scans the given glue-path packages for a type (class or interface) that extends
    * {@link ScenarioScopedComponent}.
    *
-   * @throws IllegalStateException if no such type is found in any of the glue paths
+   * @throws IllegalStateException if no such type is found in any of the glue paths, or if more
+   *     than one is found (which would cause non-deterministic behaviour)
    */
   private Class<? extends ScenarioScopedComponent> scanForScopedComponent(List<URI> gluePaths) {
+    List<Class<? extends ScenarioScopedComponent>> allFound = new ArrayList<>();
     for (URI uri : gluePaths) {
       if (!"classpath".equals(uri.getScheme())) continue;
       String path = uri.getSchemeSpecificPart();
       if (path.startsWith("/")) path = path.substring(1);
       String packageName = path.replace('/', '.');
-      List<Class<? extends ScenarioScopedComponent>> found =
-          classPathScanner.scanForSubClassesInPackage(packageName, ScenarioScopedComponent.class);
-      if (!found.isEmpty()) {
-        return found.get(0);
-      }
+      allFound.addAll(
+          classPathScanner.scanForSubClassesInPackage(packageName, ScenarioScopedComponent.class));
     }
-    throw new IllegalStateException(
-        "No ScenarioScopedComponent type found in glue paths: "
-            + gluePaths
-            + ". Please ensure cucumber-dagger-processor has run.");
+    if (allFound.isEmpty()) {
+      throw new IllegalStateException(
+          "No ScenarioScopedComponent type found in glue paths: "
+              + gluePaths
+              + ". Please ensure cucumber-dagger-processor has run.");
+    }
+    if (allFound.size() > 1) {
+      throw new IllegalStateException(
+          "Multiple ScenarioScopedComponent types found in glue paths: "
+              + allFound
+              + ". Only one is expected — please ensure cucumber-dagger-processor has run correctly.");
+    }
+    return allFound.get(0);
   }
 }

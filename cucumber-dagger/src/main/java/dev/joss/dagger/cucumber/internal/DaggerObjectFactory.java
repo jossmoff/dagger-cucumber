@@ -37,8 +37,11 @@ public final class DaggerObjectFactory implements ObjectFactory {
   private CucumberDaggerComponent rootComponent;
   private final Map<Class<?>, MethodHandle> rootHandles = new HashMap<>();
   private final Map<Class<?>, MethodHandle> scopedHandles = new HashMap<>();
-  private static final ThreadLocal<Map<Class<?>, Supplier<Object>>> scopedSuppliers =
-      new ThreadLocal<>();
+
+  @SuppressWarnings(
+      "ThreadLocalUsage") // intentional instance field — prevents cross-factory leakage
+  private final ThreadLocal<Map<Class<?>, Supplier<Object>>> scopedSuppliers = new ThreadLocal<>();
+
   private final ThreadLocal<Map<Class<?>, Object>> instances =
       ThreadLocal.withInitial(HashMap::new);
 
