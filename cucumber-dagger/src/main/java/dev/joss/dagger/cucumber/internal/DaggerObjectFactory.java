@@ -77,6 +77,7 @@ public final class DaggerObjectFactory implements ObjectFactory {
                             + root.getClass()
                             + " does not implement a CucumberDaggerComponent sub-interface"));
     for (Method method : rootInterface.getMethods()) {
+      if (method.getDeclaringClass() == Object.class) continue;
       if (method.getParameterCount() != 0) continue;
       if (method.getReturnType().equals(Void.TYPE)) continue;
       if (ScenarioScopedComponent.Builder.class.isAssignableFrom(method.getReturnType())) continue;
@@ -88,6 +89,7 @@ public final class DaggerObjectFactory implements ObjectFactory {
     }
 
     for (Method method : scopedInterface.getMethods()) {
+      if (method.getDeclaringClass() == Object.class) continue;
       if (method.getParameterCount() != 0) continue;
       if (method.getReturnType().equals(Void.TYPE)) continue;
       if (ScenarioScopedComponent.Builder.class.isAssignableFrom(method.getReturnType())) continue;

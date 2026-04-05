@@ -140,7 +140,10 @@ class DaggerBackend implements Backend {
       throw new IllegalStateException(
           factoryClassName
               + " does not have a static create() method. "
-              + "Ensure CucumberDaggerModule is in your @Component modules list.",
+              + "Dagger only generates create() when all modules have no-arg or static @Provides "
+              + "methods and no @BindsInstance parameters are required. "
+              + "If your component requires a builder, this is not yet supported — "
+              + "see https://github.com/jossmoff/dagger-cucumber/issues for tracking.",
           e);
     } catch (InvocationTargetException | IllegalAccessException e) {
       throw new IllegalStateException("Failed to invoke " + factoryClassName + ".create()", e);
