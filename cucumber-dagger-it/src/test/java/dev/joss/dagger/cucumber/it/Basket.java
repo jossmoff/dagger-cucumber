@@ -1,19 +1,19 @@
 package dev.joss.dagger.cucumber.it;
 
-import dev.joss.dagger.cucumber.api.CucumberScoped;
+import dev.joss.dagger.cucumber.api.ScenarioScoped;
 import jakarta.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 /**
- * Per-scenario shopping basket (Style-A {@code @CucumberScoped}). A fresh instance is injected for
+ * Per-scenario shopping basket (Style-A {@code @ScenarioScoped}). A fresh instance is injected for
  * every scenario.
  *
  * <p>Receives the singleton {@link PriceList} provided by {@link PriceListModule} and the
- * per-scenario {@link Discount} (also Style-A {@code @CucumberScoped}).
+ * per-scenario {@link Discount} (also Style-A {@code @ScenarioScoped}).
  */
-@CucumberScoped
+@ScenarioScoped
 public final class Basket {
 
   private final PriceList priceList;

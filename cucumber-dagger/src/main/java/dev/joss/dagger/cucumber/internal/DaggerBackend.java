@@ -1,7 +1,7 @@
 package dev.joss.dagger.cucumber.internal;
 
 import dev.joss.dagger.cucumber.api.CucumberDaggerComponent;
-import dev.joss.dagger.cucumber.api.CucumberScopedComponent;
+import dev.joss.dagger.cucumber.api.ScenarioScopedComponent;
 import io.cucumber.core.backend.Backend;
 import io.cucumber.core.backend.Container;
 import io.cucumber.core.backend.Glue;
@@ -32,7 +32,7 @@ import java.util.function.Supplier;
  *       DaggerXxx}) and calls its static {@code create()} method to obtain the root component
  *       instance.
  *   <li>Resolves the generated {@code GeneratedScopedComponent} interface, preferring the
- *       annotation-processor-generated {@code CucumberScopedComponentAccessor} and falling back to
+ *       annotation-processor-generated {@code ScenarioScopedComponentAccessor} and falling back to
  *       a classpath scan.
  *   <li>Passes both to {@link DaggerObjectFactory#configure} so the object factory can set up
  *       method handles for provision and scenario-scoped objects.
@@ -44,7 +44,7 @@ import java.util.function.Supplier;
 class DaggerBackend implements Backend {
 
   private static final String ACCESSOR_CLASS =
-      "dev.joss.dagger.cucumber.generated.CucumberScopedComponentAccessor";
+      "dev.joss.dagger.cucumber.generated.ScenarioScopedComponentAccessor";
   private static final String COMPONENT_SERVICE_FILE =
       "META-INF/services/dev.joss.dagger.cucumber.api.CucumberDaggerComponent";
 
@@ -66,7 +66,7 @@ class DaggerBackend implements Backend {
   @Override
   public void loadGlue(Glue _glue, List<URI> gluePaths) {
     CucumberDaggerComponent component = loadComponent();
-    Class<? extends CucumberScopedComponent> scopedInterface = resolveScopedInterface(gluePaths);
+    Class<? extends ScenarioScopedComponent> scopedInterface = resolveScopedInterface(gluePaths);
     container.addClass(component.getClass());
     getFactory().configure(component, scopedInterface);
   }
@@ -177,44 +177,44 @@ class DaggerBackend implements Backend {
   /**
    * Resolves the generated {@code GeneratedScopedComponent} interface class.
    *
-   * <p>Tries to load the annotation-processor-generated {@code CucumberScopedComponentAccessor}
+   * <p>Tries to load the annotation-processor-generated {@code ScenarioScopedComponentAccessor}
    * first. If that class is not on the classpath (e.g., the processor has not run), falls back to
    * {@link #scanForScopedComponent(List)}.
    */
   @SuppressWarnings("unchecked")
-  private Class<? extends CucumberScopedComponent> resolveScopedInterface(List<URI> gluePaths) {
+  private Class<? extends ScenarioScopedComponent> resolveScopedInterface(List<URI> gluePaths) {
     try {
       Class<?> accessorClass = Class.forName(ACCESSOR_CLASS, true, classLoaderSupplier.get());
       Object accessor = accessorClass.getDeclaredConstructor().newInstance();
-      return (Class<? extends CucumberScopedComponent>)
+      return (Class<? extends ScenarioScopedComponent>)
           accessorClass.getMethod("getScopedComponentClass").invoke(accessor);
     } catch (ClassNotFoundException e) {
       return scanForScopedComponent(gluePaths);
     } catch (ReflectiveOperationException e) {
-      throw new RuntimeException("Failed to load CucumberScopedComponentAccessor", e);
+      throw new RuntimeException("Failed to load ScenarioScopedComponentAccessor", e);
     }
   }
 
   /**
    * Fallback: scans the given glue-path packages for a non-interface subclass of {@link
-   * CucumberScopedComponent}.
+   * ScenarioScopedComponent}.
    *
    * @throws IllegalStateException if no implementation is found in any of the glue paths
    */
-  private Class<? extends CucumberScopedComponent> scanForScopedComponent(List<URI> gluePaths) {
+  private Class<? extends ScenarioScopedComponent> scanForScopedComponent(List<URI> gluePaths) {
     for (URI uri : gluePaths) {
       if (!"classpath".equals(uri.getScheme())) continue;
       String path = uri.getSchemeSpecificPart();
       if (path.startsWith("/")) path = path.substring(1);
       String packageName = path.replace('/', '.');
-      List<Class<? extends CucumberScopedComponent>> found =
-          classPathScanner.scanForSubClassesInPackage(packageName, CucumberScopedComponent.class);
+      List<Class<? extends ScenarioScopedComponent>> found =
+          classPathScanner.scanForSubClassesInPackage(packageName, ScenarioScopedComponent.class);
       if (!found.isEmpty()) {
         return found.get(0);
       }
     }
     throw new IllegalStateException(
-        "No CucumberScopedComponent implementation found in glue paths: "
+        "No ScenarioScopedComponent implementation found in glue paths: "
             + gluePaths
             + ". Please ensure cucumber-dagger-processor has run.");
   }

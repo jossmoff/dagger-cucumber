@@ -7,7 +7,7 @@ import javax.lang.model.element.TypeElement;
 
 /**
  * Output of {@link CollectStepDefsStep}: step-definition provision methods (return type → method
- * name) for classes that have an {@code @Inject} constructor but are not {@code @CucumberScoped}.
+ * name) for classes that have an {@code @Inject} constructor but are not {@code @ScenarioScoped}.
  */
 record CollectedStepDefs(
     TypeElement rootComponent,

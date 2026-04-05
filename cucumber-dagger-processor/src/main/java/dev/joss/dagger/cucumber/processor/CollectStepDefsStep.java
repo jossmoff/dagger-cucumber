@@ -14,7 +14,7 @@ import javax.lang.model.element.TypeElement;
  * Pipeline step 3 — collects step-definition classes.
  *
  * <p>A step-definition class is any class in the glue package that has an {@code @Inject}
- * constructor but is <em>not</em> already annotated with {@code @CucumberScoped} (those are handled
+ * constructor but is <em>not</em> already annotated with {@code @ScenarioScoped} (those are handled
  * by step 2).
  *
  * <p>This step performs no validation: having zero step-definition classes is valid.

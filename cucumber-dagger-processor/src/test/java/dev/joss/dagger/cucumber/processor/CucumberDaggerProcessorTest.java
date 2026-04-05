@@ -32,7 +32,7 @@ class CucumberDaggerProcessorTest {
     assertThat(compilation).generatedSourceFile("test.CucumberDaggerModule");
     assertThat(compilation).generatedSourceFile("test.GeneratedCucumberAppComponent");
     assertThat(compilation)
-        .generatedSourceFile("dev.joss.dagger.cucumber.generated.CucumberScopedComponentAccessor");
+        .generatedSourceFile("dev.joss.dagger.cucumber.generated.ScenarioScopedComponentAccessor");
   }
 
   @Test
@@ -102,9 +102,9 @@ class CucumberDaggerProcessorTest {
             JavaFileObjects.forSourceLines(
                 "test.MyScoped",
                 "package test;",
-                "import dev.joss.dagger.cucumber.api.CucumberScoped;",
+                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
                 "import jakarta.inject.Inject;",
-                "@CucumberScoped",
+                "@ScenarioScoped",
                 "public class MyScoped {",
                 "  @Inject public MyScoped() {}",
                 "}"));
@@ -199,12 +199,12 @@ class CucumberDaggerProcessorTest {
             JavaFileObjects.forSourceLines(
                 "test.BadScoped",
                 "package test;",
-                "import dev.joss.dagger.cucumber.api.CucumberScoped;",
-                "@CucumberScoped",
+                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
+                "@ScenarioScoped",
                 "public interface BadScoped {}"));
 
     assertThat(compilation).failed();
-    assertThat(compilation).hadErrorContaining("@CucumberScoped can only be applied to concrete");
+    assertThat(compilation).hadErrorContaining("@ScenarioScoped can only be applied to concrete");
   }
 
   @Test
@@ -222,12 +222,12 @@ class CucumberDaggerProcessorTest {
             JavaFileObjects.forSourceLines(
                 "test.BadScoped",
                 "package test;",
-                "import dev.joss.dagger.cucumber.api.CucumberScoped;",
-                "@CucumberScoped",
+                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
+                "@ScenarioScoped",
                 "public abstract class BadScoped {}"));
 
     assertThat(compilation).failed();
-    assertThat(compilation).hadErrorContaining("@CucumberScoped can only be applied to concrete");
+    assertThat(compilation).hadErrorContaining("@ScenarioScoped can only be applied to concrete");
   }
 
   @Test
@@ -245,8 +245,8 @@ class CucumberDaggerProcessorTest {
             JavaFileObjects.forSourceLines(
                 "test.MyScoped",
                 "package test;",
-                "import dev.joss.dagger.cucumber.api.CucumberScoped;",
-                "@CucumberScoped",
+                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
+                "@ScenarioScoped",
                 "public class MyScoped {}"));
 
     assertThat(compilation).failed();
@@ -254,7 +254,7 @@ class CucumberDaggerProcessorTest {
   }
 
   @Test
-  void qualifiedCucumberScopedProviderMethodEmitsCompileError() {
+  void qualifiedScenarioScopedProviderMethodEmitsCompileError() {
     Compilation compilation =
         compile(
             JavaFileObjects.forSourceLines(
@@ -272,11 +272,11 @@ class CucumberDaggerProcessorTest {
                 "package test;",
                 "import dagger.Module;",
                 "import dagger.Provides;",
-                "import dev.joss.dagger.cucumber.api.CucumberScoped;",
+                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
                 "import jakarta.inject.Named;",
                 "@Module",
                 "public class SomeModule {",
-                "  @Provides @CucumberScoped @Named(\"foo\")",
+                "  @Provides @ScenarioScoped @Named(\"foo\")",
                 "  public static SomeService provideSomeService() {",
                 "    return new SomeService();",
                 "  }",
@@ -285,6 +285,6 @@ class CucumberDaggerProcessorTest {
     assertThat(compilation).failed();
     assertThat(compilation)
         .hadErrorContaining(
-            "Qualified @CucumberScoped provider methods are not currently supported");
+            "Qualified @ScenarioScoped provider methods are not currently supported");
   }
 }

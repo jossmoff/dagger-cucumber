@@ -1,7 +1,7 @@
 package dev.joss.dagger.cucumber.internal;
 
 import dev.joss.dagger.cucumber.api.CucumberDaggerComponent;
-import dev.joss.dagger.cucumber.api.CucumberScopedComponent;
+import dev.joss.dagger.cucumber.api.ScenarioScopedComponent;
 import io.cucumber.core.backend.ObjectFactory;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -25,7 +25,7 @@ import java.util.function.Supplier;
  *       root-component provision methods and scoped-component provision/step-def methods.
  *   <li><strong>{@link #buildWorld()}</strong> — called before each scenario. Calls {@link
  *       CucumberDaggerComponent#scopedComponentBuilder()} to create a fresh {@link
- *       CucumberScopedComponent} and binds per-scenario suppliers.
+ *       ScenarioScopedComponent} and binds per-scenario suppliers.
  *   <li><strong>{@link #getInstance}</strong> — resolves a step-definition or scoped object,
  *       caching the result within the current scenario.
  *   <li><strong>{@link #disposeWorld()}</strong> — called after each scenario. Clears the
@@ -59,7 +59,7 @@ public final class DaggerObjectFactory implements ObjectFactory {
    * @param scopedInterface the generated {@code GeneratedScopedComponent} interface class
    */
   void configure(
-      CucumberDaggerComponent root, Class<? extends CucumberScopedComponent> scopedInterface) {
+      CucumberDaggerComponent root, Class<? extends ScenarioScopedComponent> scopedInterface) {
     this.rootComponent = root;
     MethodHandles.Lookup lookup = MethodHandles.lookup();
 
@@ -79,7 +79,7 @@ public final class DaggerObjectFactory implements ObjectFactory {
     for (Method method : rootInterface.getMethods()) {
       if (method.getParameterCount() != 0) continue;
       if (method.getReturnType().equals(Void.TYPE)) continue;
-      if (CucumberScopedComponent.Builder.class.isAssignableFrom(method.getReturnType())) continue;
+      if (ScenarioScopedComponent.Builder.class.isAssignableFrom(method.getReturnType())) continue;
       try {
         rootHandles.put(method.getReturnType(), lookup.unreflect(method).bindTo(root));
       } catch (IllegalAccessException e) {
@@ -90,7 +90,7 @@ public final class DaggerObjectFactory implements ObjectFactory {
     for (Method method : scopedInterface.getMethods()) {
       if (method.getParameterCount() != 0) continue;
       if (method.getReturnType().equals(Void.TYPE)) continue;
-      if (CucumberScopedComponent.Builder.class.isAssignableFrom(method.getReturnType())) continue;
+      if (ScenarioScopedComponent.Builder.class.isAssignableFrom(method.getReturnType())) continue;
       try {
         scopedHandles.put(method.getReturnType(), lookup.unreflect(method));
       } catch (IllegalAccessException e) {
@@ -132,7 +132,7 @@ public final class DaggerObjectFactory implements ObjectFactory {
 
   /**
    * Called by {@link DaggerBackend#buildWorld()} before each scenario. Creates a fresh {@link
-   * CucumberScopedComponent} via the root component's builder and binds the scoped provision method
+   * ScenarioScopedComponent} via the root component's builder and binds the scoped provision method
    * handles to it.
    */
   @SuppressWarnings({"rawtypes"})
@@ -143,8 +143,8 @@ public final class DaggerObjectFactory implements ObjectFactory {
               + "Please add the annotationProcessor dependency and include "
               + "CucumberDaggerModule in your @Component modules list.");
     }
-    CucumberScopedComponent.Builder builder = rootComponent.scopedComponentBuilder();
-    CucumberScopedComponent scoped = builder.build();
+    ScenarioScopedComponent.Builder builder = rootComponent.scopedComponentBuilder();
+    ScenarioScopedComponent scoped = builder.build();
     Map<Class<?>, Supplier<Object>> bound = new HashMap<>();
     for (Map.Entry<Class<?>, MethodHandle> entry : scopedHandles.entrySet()) {
       MethodHandle boundHandle = entry.getValue().bindTo(scoped);

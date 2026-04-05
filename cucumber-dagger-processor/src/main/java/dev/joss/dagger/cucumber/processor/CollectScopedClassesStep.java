@@ -12,14 +12,14 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 
 /**
- * Pipeline step 2 — collects all {@code @CucumberScoped} classes in the glue package and validates
+ * Pipeline step 2 — collects all {@code @ScenarioScoped} classes in the glue package and validates
  * each one.
  *
  * <p>Validation rules (all errors are accumulated before halting):
  *
  * <ul>
- *   <li>Interfaces and abstract classes may not be annotated with {@code @CucumberScoped}.
- *   <li>Every concrete {@code @CucumberScoped} class must declare an {@code @Inject} constructor so
+ *   <li>Interfaces and abstract classes may not be annotated with {@code @ScenarioScoped}.
+ *   <li>Every concrete {@code @ScenarioScoped} class must declare an {@code @Inject} constructor so
  *       Dagger can create it inside the generated scoped subcomponent.
  * </ul>
  *
@@ -48,7 +48,7 @@ final class CollectScopedClassesStep
         ctx.messager()
             .printMessage(
                 Diagnostic.Kind.ERROR,
-                "@CucumberScoped can only be applied to concrete classes",
+                "@ScenarioScoped can only be applied to concrete classes",
                 element);
         hasErrors = true;
       }
@@ -69,7 +69,7 @@ final class CollectScopedClassesStep
           ctx.messager()
               .printMessage(
                   Diagnostic.Kind.ERROR,
-                  "@CucumberScoped class "
+                  "@ScenarioScoped class "
                       + scopedClass.getSimpleName()
                       + " must declare an @Inject constructor so Dagger can create it"
                       + " in the generated scoped subcomponent",

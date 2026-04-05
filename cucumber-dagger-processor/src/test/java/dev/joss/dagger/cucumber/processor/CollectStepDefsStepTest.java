@@ -96,9 +96,9 @@ class CollectStepDefsStepTest {
             JavaFileObjects.forSourceLines(
                 "test.MyScoped",
                 "package test;",
-                "import dev.joss.dagger.cucumber.api.CucumberScoped;",
+                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
                 "import jakarta.inject.Inject;",
-                "@CucumberScoped",
+                "@ScenarioScoped",
                 "public class MyScoped {",
                 "  @Inject public MyScoped() {}",
                 "}"));

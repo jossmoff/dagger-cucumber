@@ -17,7 +17,7 @@ final class KnownTypes {
   /** {@code dev.joss.dagger.cucumber.api.CucumberDaggerConfiguration} */
   final TypeElement cucumberDaggerConfiguration;
 
-  /** {@code dev.joss.dagger.cucumber.api.CucumberScoped} */
+  /** {@code dev.joss.dagger.cucumber.api.ScenarioScoped} */
   final TypeElement cucumberScoped;
 
   /** {@code dagger.Component} */
@@ -43,7 +43,7 @@ final class KnownTypes {
   KnownTypes(ProcessingEnvironment processingEnv) {
     Elements elements = processingEnv.getElementUtils();
     cucumberDaggerConfiguration = elements.getTypeElement(API_PKG + ".CucumberDaggerConfiguration");
-    cucumberScoped = elements.getTypeElement(API_PKG + ".CucumberScoped");
+    cucumberScoped = elements.getTypeElement(API_PKG + ".ScenarioScoped");
     daggerComponent = elements.getTypeElement("dagger.Component");
     daggerProvides = elements.getTypeElement("dagger.Provides");
     jakartaInject = elements.getTypeElement("jakarta.inject.Inject");

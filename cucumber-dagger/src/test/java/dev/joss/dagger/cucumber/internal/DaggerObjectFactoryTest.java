@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import dev.joss.dagger.cucumber.api.CucumberDaggerComponent;
-import dev.joss.dagger.cucumber.api.CucumberScopedComponent;
+import dev.joss.dagger.cucumber.api.ScenarioScopedComponent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ class DaggerObjectFactoryTest {
 
   public static class RootService {}
 
-  public interface TestScopedComponent extends CucumberScopedComponent {
+  public interface TestScopedComponent extends ScenarioScopedComponent {
     StepDef stepDef();
 
     ScopedObject scopedObject();
@@ -43,7 +43,7 @@ class DaggerObjectFactoryTest {
   }
 
   public static class TestScopedBuilder
-      implements CucumberScopedComponent.Builder<TestScopedComponentImpl> {
+      implements ScenarioScopedComponent.Builder<TestScopedComponentImpl> {
     @Override
     public TestScopedComponentImpl build() {
       return new TestScopedComponentImpl();
@@ -53,7 +53,7 @@ class DaggerObjectFactoryTest {
   public static class TestRootComponentImpl implements TestRootComponent {
     @Override
     @SuppressWarnings("rawtypes")
-    public CucumberScopedComponent.Builder scopedComponentBuilder() {
+    public ScenarioScopedComponent.Builder scopedComponentBuilder() {
       return new TestScopedBuilder();
     }
 

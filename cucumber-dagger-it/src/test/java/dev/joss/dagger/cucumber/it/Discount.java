@@ -1,14 +1,14 @@
 package dev.joss.dagger.cucumber.it;
 
-import dev.joss.dagger.cucumber.api.CucumberScoped;
+import dev.joss.dagger.cucumber.api.ScenarioScoped;
 import jakarta.inject.Inject;
 
 /**
- * Per-scenario discount applied at checkout (Style-A {@code @CucumberScoped}). A fresh instance
+ * Per-scenario discount applied at checkout (Style-A {@code @ScenarioScoped}). A fresh instance
  * starting at 0% is created for each scenario; step definitions can call {@link #setPercent(int)}
  * to configure it within a scenario.
  */
-@CucumberScoped
+@ScenarioScoped
 public final class Discount {
 
   private int percent;

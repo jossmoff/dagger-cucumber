@@ -22,9 +22,9 @@ import javax.tools.Diagnostic;
  * <p>Responsibilities:
  *
  * <ul>
- *   <li>Builds Style-A provision methods (one per {@code @CucumberScoped} class).
+ *   <li>Builds Style-A provision methods (one per {@code @ScenarioScoped} class).
  *   <li>Scans each module listed in the root {@code @Component} for
- *       {@code @Provides @CucumberScoped} methods (Style B) and adds them to the provision-method
+ *       {@code @Provides @ScenarioScoped} methods (Style B) and adds them to the provision-method
  *       map.
  *   <li>Rejects qualified ({@code @Named} etc.) Style-B provider methods with a compile error.
  *   <li>Copies scope annotations (e.g. {@code @Singleton}) from the root component to the model.
@@ -38,14 +38,14 @@ final class BuildProcessingModelStep
 
     boolean hasErrors = false;
 
-    // Style-A: one provision method per @CucumberScoped class
+    // Style-A: one provision method per @ScenarioScoped class
     Map<TypeName, String> scopedProvisionMethods = new LinkedHashMap<>();
     for (TypeElement scopedClass : input.scopedClasses()) {
       scopedProvisionMethods.put(
           TypeName.get(scopedClass.asType()), NamingStrategy.provisionMethodName(scopedClass));
     }
 
-    // Style-B: scan @Component modules for @Provides @CucumberScoped methods
+    // Style-B: scan @Component modules for @Provides @ScenarioScoped methods
     List<TypeElement> userScopedModules = new ArrayList<>();
     List<TypeMirror> userModules =
         ctx.annotationUtils.getClassArrayValue(
@@ -69,7 +69,7 @@ final class BuildProcessingModelStep
           ctx.messager()
               .printMessage(
                   Diagnostic.Kind.ERROR,
-                  "Qualified @CucumberScoped provider methods are not currently supported: "
+                  "Qualified @ScenarioScoped provider methods are not currently supported: "
                       + method.getSimpleName(),
                   method);
           hasErrors = true;

@@ -40,9 +40,9 @@ class CollectScopedClassesStepTest {
             JavaFileObjects.forSourceLines(
                 "test.MyScoped",
                 "package test;",
-                "import dev.joss.dagger.cucumber.api.CucumberScoped;",
+                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
                 "import jakarta.inject.Inject;",
-                "@CucumberScoped",
+                "@ScenarioScoped",
                 "public class MyScoped {",
                 "  @Inject public MyScoped() {}",
                 "}"));
@@ -71,9 +71,9 @@ class CollectScopedClassesStepTest {
             JavaFileObjects.forSourceLines(
                 "other.MyScoped",
                 "package other;",
-                "import dev.joss.dagger.cucumber.api.CucumberScoped;",
+                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
                 "import jakarta.inject.Inject;",
-                "@CucumberScoped",
+                "@ScenarioScoped",
                 "public class MyScoped {",
                 "  @Inject public MyScoped() {}",
                 "}"));
@@ -84,7 +84,7 @@ class CollectScopedClassesStepTest {
   }
 
   @Test
-  void interfaceAnnotatedWithCucumberScopedHaltsAndEmitsError() {
+  void interfaceAnnotatedWithScenarioScopedHaltsAndEmitsError() {
     AtomicReference<StepResult<CollectedScopedClasses>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -100,16 +100,16 @@ class CollectScopedClassesStepTest {
             JavaFileObjects.forSourceLines(
                 "test.BadScoped",
                 "package test;",
-                "import dev.joss.dagger.cucumber.api.CucumberScoped;",
-                "@CucumberScoped",
+                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
+                "@ScenarioScoped",
                 "public interface BadScoped {}"));
 
-    assertThat(compilation).hadErrorContaining("@CucumberScoped can only be applied to concrete");
+    assertThat(compilation).hadErrorContaining("@ScenarioScoped can only be applied to concrete");
     assertThat(captured.get().isFailed()).isTrue();
   }
 
   @Test
-  void abstractClassAnnotatedWithCucumberScopedHaltsAndEmitsError() {
+  void abstractClassAnnotatedWithScenarioScopedHaltsAndEmitsError() {
     AtomicReference<StepResult<CollectedScopedClasses>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -125,11 +125,11 @@ class CollectScopedClassesStepTest {
             JavaFileObjects.forSourceLines(
                 "test.BadScoped",
                 "package test;",
-                "import dev.joss.dagger.cucumber.api.CucumberScoped;",
-                "@CucumberScoped",
+                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
+                "@ScenarioScoped",
                 "public abstract class BadScoped {}"));
 
-    assertThat(compilation).hadErrorContaining("@CucumberScoped can only be applied to concrete");
+    assertThat(compilation).hadErrorContaining("@ScenarioScoped can only be applied to concrete");
     assertThat(captured.get().isFailed()).isTrue();
   }
 
@@ -150,8 +150,8 @@ class CollectScopedClassesStepTest {
             JavaFileObjects.forSourceLines(
                 "test.BadScoped",
                 "package test;",
-                "import dev.joss.dagger.cucumber.api.CucumberScoped;",
-                "@CucumberScoped",
+                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
+                "@ScenarioScoped",
                 "public class BadScoped {}"));
 
     assertThat(compilation).hadErrorContaining("must declare an @Inject constructor");
@@ -175,17 +175,17 @@ class CollectScopedClassesStepTest {
             JavaFileObjects.forSourceLines(
                 "test.BadInterface",
                 "package test;",
-                "import dev.joss.dagger.cucumber.api.CucumberScoped;",
-                "@CucumberScoped",
+                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
+                "@ScenarioScoped",
                 "public interface BadInterface {}"),
             JavaFileObjects.forSourceLines(
                 "test.BadNoInject",
                 "package test;",
-                "import dev.joss.dagger.cucumber.api.CucumberScoped;",
-                "@CucumberScoped",
+                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
+                "@ScenarioScoped",
                 "public class BadNoInject {}"));
 
-    assertThat(compilation).hadErrorContaining("@CucumberScoped can only be applied to concrete");
+    assertThat(compilation).hadErrorContaining("@ScenarioScoped can only be applied to concrete");
     assertThat(compilation).hadErrorContaining("must declare an @Inject constructor");
     assertThat(captured.get().isFailed()).isTrue();
   }

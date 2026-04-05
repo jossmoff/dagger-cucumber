@@ -14,11 +14,11 @@ import java.lang.annotation.Target;
  * There are two supported usage styles:
  *
  * <ul>
- *   <li><strong>Style A — annotate the class:</strong> Apply {@code @CucumberScoped} directly to a
+ *   <li><strong>Style A — annotate the class:</strong> Apply {@code @ScenarioScoped} directly to a
  *       class that also has an {@code @Inject} constructor. The annotation processor will
  *       automatically generate a provision method for it in the per-scenario subcomponent.
  *   <li><strong>Style B — annotate a {@code @Provides} method:</strong> Place
- *       {@code @Provides @CucumberScoped} on a method inside a Dagger module that is listed in the
+ *       {@code @Provides @ScenarioScoped} on a method inside a Dagger module that is listed in the
  *       root {@code @Component}. The annotation processor will include that module in the generated
  *       scoped subcomponent and expose the return type as a provision method.
  * </ul>
@@ -27,4 +27,4 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
-public @interface CucumberScoped {}
+public @interface ScenarioScoped {}

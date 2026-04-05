@@ -15,8 +15,8 @@ import javax.lang.model.type.TypeMirror;
  *
  * @param rootComponent The {@code @CucumberDaggerConfiguration}-annotated root component interface.
  * @param rootPackage Package of {@link #rootComponent()}; used as the generated-file package.
- * @param scopedClasses Style-A: classes directly annotated with {@code @CucumberScoped}.
- * @param userScopedModules Style-B: user modules that contain {@code @Provides @CucumberScoped}
+ * @param scopedClasses Style-A: classes directly annotated with {@code @ScenarioScoped}.
+ * @param userScopedModules Style-B: user modules that contain {@code @Provides @ScenarioScoped}
  *     methods.
  * @param scopedProvisionMethods Combined Style-A and Style-B scoped provision methods: return
  *     {@link TypeName} → method name. Backed by a {@link LinkedHashMap} to preserve insertion order

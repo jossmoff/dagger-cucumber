@@ -102,9 +102,9 @@ class BuildProcessingModelStepTest {
             JavaFileObjects.forSourceLines(
                 "test.MyScoped",
                 "package test;",
-                "import dev.joss.dagger.cucumber.api.CucumberScoped;",
+                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
                 "import jakarta.inject.Inject;",
-                "@CucumberScoped",
+                "@ScenarioScoped",
                 "public class MyScoped {",
                 "  @Inject public MyScoped() {}",
                 "}"));
@@ -135,10 +135,10 @@ class BuildProcessingModelStepTest {
                 "package test;",
                 "import dagger.Module;",
                 "import dagger.Provides;",
-                "import dev.joss.dagger.cucumber.api.CucumberScoped;",
+                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
                 "@Module",
                 "public class SomeModule {",
-                "  @Provides @CucumberScoped",
+                "  @Provides @ScenarioScoped",
                 "  public static SomeService provideSomeService() { return new SomeService(); }",
                 "}"),
             JavaFileObjects.forSourceLines(
@@ -179,11 +179,11 @@ class BuildProcessingModelStepTest {
                 "package test;",
                 "import dagger.Module;",
                 "import dagger.Provides;",
-                "import dev.joss.dagger.cucumber.api.CucumberScoped;",
+                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
                 "import jakarta.inject.Named;",
                 "@Module",
                 "public class SomeModule {",
-                "  @Provides @CucumberScoped @Named(\"foo\")",
+                "  @Provides @ScenarioScoped @Named(\"foo\")",
                 "  public static SomeService provide() { return new SomeService(); }",
                 "}"),
             JavaFileObjects.forSourceLines(
@@ -197,7 +197,7 @@ class BuildProcessingModelStepTest {
 
     assertThat(compilation)
         .hadErrorContaining(
-            "Qualified @CucumberScoped provider methods are not currently supported");
+            "Qualified @ScenarioScoped provider methods are not currently supported");
     assertThat(captured.get().isFailed()).isTrue();
   }
 }

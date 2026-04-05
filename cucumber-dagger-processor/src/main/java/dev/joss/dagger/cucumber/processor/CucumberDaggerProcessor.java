@@ -21,17 +21,17 @@ import javax.lang.model.element.TypeElement;
  *
  * <ul>
  *   <li><strong>{@code GeneratedScopedModule}</strong> — a Dagger {@code @Module} that optionally
- *       includes any user modules that contain {@code @Provides @CucumberScoped} methods (Style B).
+ *       includes any user modules that contain {@code @Provides @ScenarioScoped} methods (Style B).
  *   <li><strong>{@code GeneratedScopedComponent}</strong> — a Dagger {@code @Subcomponent} scoped
- *       with {@code @CucumberScoped} that declares provision methods for all scenario-scoped types
+ *       with {@code @ScenarioScoped} that declares provision methods for all scenario-scoped types
  *       and step-definition classes discovered in the glue package.
  *   <li><strong>{@code CucumberDaggerModule}</strong> — the module that declares the subcomponent
- *       and provides the raw-type {@code CucumberScopedComponent.Builder} binding needed by the
+ *       and provides the raw-type {@code ScenarioScopedComponent.Builder} binding needed by the
  *       runtime.
  *   <li><strong>{@code GeneratedCucumber{UserSimpleName}}</strong> — a wrapper {@code @Component}
  *       that combines the user's modules with {@code CucumberDaggerModule}. Users do <em>not</em>
  *       need to list {@code CucumberDaggerModule} themselves; the processor adds it automatically.
- *   <li><strong>{@code dev.joss.dagger.cucumber.generated.CucumberScopedComponentAccessor}</strong>
+ *   <li><strong>{@code dev.joss.dagger.cucumber.generated.ScenarioScopedComponentAccessor}</strong>
  *       — a simple accessor class that returns the {@code GeneratedScopedComponent} class literal,
  *       allowing the runtime to avoid a classpath scan at startup.
  *   <li><strong>{@code META-INF/services/…CucumberDaggerComponent}</strong> — service file entry
@@ -43,7 +43,7 @@ import javax.lang.model.element.TypeElement;
  *
  * <ol>
  *   <li>{@link FindRootComponentStep} — locates and validates the root component interface.
- *   <li>{@link CollectScopedClassesStep} — finds and validates {@code @CucumberScoped} classes.
+ *   <li>{@link CollectScopedClassesStep} — finds and validates {@code @ScenarioScoped} classes.
  *   <li>{@link CollectStepDefsStep} — finds step-definition classes.
  *   <li>{@link BuildProcessingModelStep} — assembles the {@link ProcessingModel} for generation.
  * </ol>
