@@ -5,23 +5,23 @@ plugins {
     jacoco
     `maven-publish`
     signing
-    id("com.diffplug.spotless") version "8.4.0"
-    id("com.palantir.baseline-error-prone") version "6.79.0"
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.baseline.error.prone)
 }
 
 dependencies {
-    implementation("com.squareup:javapoet:1.13.0")
-    compileOnly("com.google.auto.service:auto-service-annotations:1.1.1")
-    annotationProcessor("com.google.auto.service:auto-service:1.1.1")
+    implementation(libs.javapoet)
+    compileOnly(libs.auto.service.annotations)
+    annotationProcessor(libs.auto.service)
 
     testImplementation(project(":cucumber-dagger"))
-    testImplementation("com.google.testing.compile:compile-testing:0.21.0")
-    testImplementation(platform("org.junit:junit-bom:6.0.3"))
-    testImplementation("org.mockito:mockito-junit-jupiter:5.23.0")
-    testImplementation("org.assertj:assertj-core:3.27.7")
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testAnnotationProcessor("com.google.auto.service:auto-service:1.1.1")
+    testImplementation(libs.compile.testing)
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.mockito.junit.jupiter)
+    testImplementation(libs.assertj.core)
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testAnnotationProcessor(libs.auto.service)
 }
 
 java {

@@ -2,22 +2,22 @@ import net.ltgt.gradle.errorprone.errorprone
 
 plugins {
     `java-library`
-    id("com.diffplug.spotless") version "8.4.0"
-    id("com.palantir.baseline-error-prone") version "6.79.0"
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.baseline.error.prone)
 }
 
 dependencies {
     testImplementation(project(":cucumber-dagger"))
     testAnnotationProcessor(project(":cucumber-dagger-processor"))
-    testAnnotationProcessor("com.google.dagger:dagger-compiler:2.59.2")
+    testAnnotationProcessor(libs.dagger.compiler)
 
-    testImplementation(platform("org.junit:junit-bom:6.0.3"))
-    testImplementation("org.junit.platform:junit-platform-suite-api:1.10.3")
-    testRuntimeOnly("org.junit.platform:junit-platform-suite-engine:1.10.3")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("io.cucumber:cucumber-junit-platform-engine:7.34.3")
-    testImplementation("io.cucumber:cucumber-java:7.34.3")
-    testImplementation("org.assertj:assertj-core:3.27.7")
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.platform.suite.api)
+    testRuntimeOnly(libs.junit.platform.suite.engine)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.cucumber.junit.platform.engine)
+    testImplementation(libs.cucumber.java)
+    testImplementation(libs.assertj.core)
 }
 
 spotless {

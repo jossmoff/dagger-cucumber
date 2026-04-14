@@ -1,6 +1,6 @@
 plugins {
-    id("com.palantir.git-version") version "5.0.0"
-    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
+    alias(libs.plugins.git.version)
+    alias(libs.plugins.nexus.publish)
 }
 
 val gitVersion: groovy.lang.Closure<String> by extra
