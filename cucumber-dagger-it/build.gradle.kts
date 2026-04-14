@@ -11,7 +11,7 @@ dependencies {
     testAnnotationProcessor(project(":cucumber-dagger-processor"))
     testAnnotationProcessor("com.google.dagger:dagger-compiler:2.59.2")
 
-    testImplementation(platform("org.junit:junit-bom:5.10.3"))
+    testImplementation(platform("org.junit:junit-bom:6.0.3"))
     testImplementation("org.junit.platform:junit-platform-suite-api:1.10.3")
     testRuntimeOnly("org.junit.platform:junit-platform-suite-engine:1.10.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
