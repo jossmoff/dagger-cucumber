@@ -5,20 +5,20 @@ plugins {
     jacoco
     `maven-publish`
     signing
-    id("com.diffplug.spotless") version "8.4.0"
-    id("com.palantir.baseline-error-prone") version "6.79.0"
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.baseline.error.prone)
 }
 
 dependencies {
-    api("io.cucumber:cucumber-core:7.34.3")
-    api("com.google.dagger:dagger:2.59.2")
-    api("jakarta.inject:jakarta.inject-api:2.0.1")
+    api(libs.cucumber.core)
+    api(libs.dagger)
+    api(libs.jakarta.inject.api)
 
-    testImplementation(platform("org.junit:junit-bom:6.0.3"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.23.0")
-    testImplementation("org.assertj:assertj-core:3.27.7")
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.mockito.junit.jupiter)
+    testImplementation(libs.assertj.core)
 }
 
 java {

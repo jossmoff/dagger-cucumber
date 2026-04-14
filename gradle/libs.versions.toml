@@ -1,0 +1,40 @@
+[versions]
+assertj = "3.27.7"
+auto-service = "1.1.1"
+baseline-error-prone = "6.79.0"
+compile-testing = "0.21.0"
+cucumber = "7.34.3"
+dagger = "2.59.2"
+git-version = "5.0.0"
+jakarta-inject = "2.0.1"
+javapoet = "1.13.0"
+junit-bom = "6.0.3"
+junit-platform = "1.10.3"
+mockito = "5.23.0"
+nexus-publish = "2.0.0"
+spotless = "8.4.0"
+
+[libraries]
+assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+auto-service = { module = "com.google.auto.service:auto-service", version.ref = "auto-service" }
+auto-service-annotations = { module = "com.google.auto.service:auto-service-annotations", version.ref = "auto-service" }
+compile-testing = { module = "com.google.testing.compile:compile-testing", version.ref = "compile-testing" }
+cucumber-core = { module = "io.cucumber:cucumber-core", version.ref = "cucumber" }
+cucumber-java = { module = "io.cucumber:cucumber-java", version.ref = "cucumber" }
+cucumber-junit-platform-engine = { module = "io.cucumber:cucumber-junit-platform-engine", version.ref = "cucumber" }
+dagger = { module = "com.google.dagger:dagger", version.ref = "dagger" }
+dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = "dagger" }
+jakarta-inject-api = { module = "jakarta.inject:jakarta.inject-api", version.ref = "jakarta-inject" }
+javapoet = { module = "com.squareup:javapoet", version.ref = "javapoet" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit-bom" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+junit-platform-suite-api = { module = "org.junit.platform:junit-platform-suite-api", version.ref = "junit-platform" }
+junit-platform-suite-engine = { module = "org.junit.platform:junit-platform-suite-engine", version.ref = "junit-platform" }
+mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
+
+[plugins]
+baseline-error-prone = { id = "com.palantir.baseline-error-prone", version.ref = "baseline-error-prone" }
+git-version = { id = "com.palantir.git-version", version.ref = "git-version" }
+nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexus-publish" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
