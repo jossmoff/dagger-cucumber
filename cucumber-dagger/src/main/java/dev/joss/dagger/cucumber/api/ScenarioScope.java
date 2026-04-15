@@ -27,6 +27,12 @@ import java.lang.annotation.Target;
  *   }
  * }
  * }</pre>
+ *
+ * <p><strong>Note on {@code @Target}:</strong> this annotation permits {@code ElementType.TYPE}
+ * because Dagger requires scope annotations to be applicable to types in order to annotate the
+ * generated {@code GeneratedScopedComponent} subcomponent. User code should only apply
+ * {@code @ScenarioScope} to {@code @Provides} methods; placing it on a class has no effect and the
+ * annotation processor does not process class-level usage.
  */
 @Scope
 @Documented

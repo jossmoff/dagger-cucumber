@@ -76,6 +76,11 @@ public final class DaggerObjectFactory implements ObjectFactory {
   @Override
   @SuppressWarnings("unchecked")
   public <T> T getInstance(Class<T> type) {
+    if (resolver == null || rootComponent == null) {
+      throw new IllegalStateException(
+          "DaggerObjectFactory has not been configured. "
+              + "Ensure loadGlue has been called before getInstance.");
+    }
     ScenarioScopedComponent scoped = currentScoped.get();
     Object instance = scoped != null ? resolver.resolveScoped(type, scoped) : null;
     if (instance == null) {
