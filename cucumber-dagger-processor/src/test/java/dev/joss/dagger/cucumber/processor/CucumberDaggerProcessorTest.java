@@ -32,7 +32,7 @@ class CucumberDaggerProcessorTest {
     assertThat(compilation).generatedSourceFile("test.CucumberDaggerModule");
     assertThat(compilation).generatedSourceFile("test.GeneratedCucumberAppComponent");
     assertThat(compilation)
-        .generatedSourceFile("dev.joss.dagger.cucumber.generated.ScenarioScopedComponentAccessor");
+        .generatedSourceFile("dev.joss.dagger.cucumber.generated.GeneratedComponentResolver");
   }
 
   @Test
@@ -88,7 +88,7 @@ class CucumberDaggerProcessorTest {
   }
 
   @Test
-  void styleAClassGeneratesProvisionMethodInScopedComponent() {
+  void generatedWrapperExtendsUserRootInterface() {
     Compilation compilation =
         compile(
             JavaFileObjects.forSourceLines(
@@ -98,22 +98,13 @@ class CucumberDaggerProcessorTest {
                 "import dev.joss.dagger.cucumber.api.CucumberDaggerConfiguration;",
                 "@CucumberDaggerConfiguration",
                 "@Component(modules = {})",
-                "public interface AppComponent {}"),
-            JavaFileObjects.forSourceLines(
-                "test.MyScoped",
-                "package test;",
-                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
-                "import jakarta.inject.Inject;",
-                "@ScenarioScoped",
-                "public class MyScoped {",
-                "  @Inject public MyScoped() {}",
-                "}"));
+                "public interface AppComponent {}"));
 
     assertThat(compilation).succeeded();
     assertThat(compilation)
-        .generatedSourceFile("test.GeneratedScopedComponent")
+        .generatedSourceFile("test.GeneratedCucumberAppComponent")
         .contentsAsUtf8String()
-        .contains("MyScoped myScoped()");
+        .contains("AppComponent");
   }
 
   @Test
@@ -141,6 +132,63 @@ class CucumberDaggerProcessorTest {
         .generatedSourceFile("test.GeneratedScopedComponent")
         .contentsAsUtf8String()
         .contains("MySteps mySteps()");
+  }
+
+  @Test
+  void scenarioScopeModuleMethodGeneratesProvisionMethodInScopedComponent() {
+    Compilation compilation =
+        compile(
+            JavaFileObjects.forSourceLines(
+                "test.SomeService", "package test;", "public class SomeService {}"),
+            JavaFileObjects.forSourceLines(
+                "test.SomeModule",
+                "package test;",
+                "import dagger.Module;",
+                "import dagger.Provides;",
+                "import dev.joss.dagger.cucumber.api.ScenarioScope;",
+                "@Module",
+                "public class SomeModule {",
+                "  @Provides @ScenarioScope",
+                "  public static SomeService provideSomeService() { return new SomeService(); }",
+                "}"),
+            JavaFileObjects.forSourceLines(
+                "test.AppComponent",
+                "package test;",
+                "import dagger.Component;",
+                "import dev.joss.dagger.cucumber.api.CucumberDaggerConfiguration;",
+                "@CucumberDaggerConfiguration",
+                "@Component(modules = {test.SomeModule.class})",
+                "public interface AppComponent {}"));
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation)
+        .generatedSourceFile("test.GeneratedScopedComponent")
+        .contentsAsUtf8String()
+        .contains("SomeService someService()");
+  }
+
+  @Test
+  void rootProvisionMethodsAppearsInGeneratedResolver() {
+    Compilation compilation =
+        compile(
+            JavaFileObjects.forSourceLines(
+                "test.PriceList", "package test;", "public class PriceList {}"),
+            JavaFileObjects.forSourceLines(
+                "test.AppComponent",
+                "package test;",
+                "import dagger.Component;",
+                "import dev.joss.dagger.cucumber.api.CucumberDaggerConfiguration;",
+                "@CucumberDaggerConfiguration",
+                "@Component(modules = {})",
+                "public interface AppComponent {",
+                "  PriceList priceList();",
+                "}"));
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation)
+        .generatedSourceFile("dev.joss.dagger.cucumber.generated.GeneratedComponentResolver")
+        .contentsAsUtf8String()
+        .contains("priceList()");
   }
 
   @Test
@@ -185,76 +233,7 @@ class CucumberDaggerProcessorTest {
   }
 
   @Test
-  void cucumberScopedOnInterfaceEmitsCompileError() {
-    Compilation compilation =
-        compile(
-            JavaFileObjects.forSourceLines(
-                "test.AppComponent",
-                "package test;",
-                "import dagger.Component;",
-                "import dev.joss.dagger.cucumber.api.CucumberDaggerConfiguration;",
-                "@CucumberDaggerConfiguration",
-                "@Component(modules = {})",
-                "public interface AppComponent {}"),
-            JavaFileObjects.forSourceLines(
-                "test.BadScoped",
-                "package test;",
-                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
-                "@ScenarioScoped",
-                "public interface BadScoped {}"));
-
-    assertThat(compilation).failed();
-    assertThat(compilation).hadErrorContaining("@ScenarioScoped can only be applied to concrete");
-  }
-
-  @Test
-  void cucumberScopedOnAbstractClassEmitsCompileError() {
-    Compilation compilation =
-        compile(
-            JavaFileObjects.forSourceLines(
-                "test.AppComponent",
-                "package test;",
-                "import dagger.Component;",
-                "import dev.joss.dagger.cucumber.api.CucumberDaggerConfiguration;",
-                "@CucumberDaggerConfiguration",
-                "@Component(modules = {})",
-                "public interface AppComponent {}"),
-            JavaFileObjects.forSourceLines(
-                "test.BadScoped",
-                "package test;",
-                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
-                "@ScenarioScoped",
-                "public abstract class BadScoped {}"));
-
-    assertThat(compilation).failed();
-    assertThat(compilation).hadErrorContaining("@ScenarioScoped can only be applied to concrete");
-  }
-
-  @Test
-  void cucumberScopedClassWithoutInjectConstructorEmitsCompileError() {
-    Compilation compilation =
-        compile(
-            JavaFileObjects.forSourceLines(
-                "test.AppComponent",
-                "package test;",
-                "import dagger.Component;",
-                "import dev.joss.dagger.cucumber.api.CucumberDaggerConfiguration;",
-                "@CucumberDaggerConfiguration",
-                "@Component(modules = {})",
-                "public interface AppComponent {}"),
-            JavaFileObjects.forSourceLines(
-                "test.MyScoped",
-                "package test;",
-                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
-                "@ScenarioScoped",
-                "public class MyScoped {}"));
-
-    assertThat(compilation).failed();
-    assertThat(compilation).hadErrorContaining("must declare an @Inject constructor");
-  }
-
-  @Test
-  void qualifiedScenarioScopedProviderMethodEmitsCompileError() {
+  void qualifiedScenarioScopeProviderMethodEmitsCompileError() {
     Compilation compilation =
         compile(
             JavaFileObjects.forSourceLines(
@@ -272,11 +251,11 @@ class CucumberDaggerProcessorTest {
                 "package test;",
                 "import dagger.Module;",
                 "import dagger.Provides;",
-                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
+                "import dev.joss.dagger.cucumber.api.ScenarioScope;",
                 "import jakarta.inject.Named;",
                 "@Module",
                 "public class SomeModule {",
-                "  @Provides @ScenarioScoped @Named(\"foo\")",
+                "  @Provides @ScenarioScope @Named(\"foo\")",
                 "  public static SomeService provideSomeService() {",
                 "    return new SomeService();",
                 "  }",
@@ -285,6 +264,6 @@ class CucumberDaggerProcessorTest {
     assertThat(compilation).failed();
     assertThat(compilation)
         .hadErrorContaining(
-            "Qualified @ScenarioScoped provider methods are not currently supported");
+            "Qualified @ScenarioScope provider methods are not currently supported");
   }
 }

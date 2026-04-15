@@ -68,7 +68,7 @@ final class AnnotationUtils {
    * Returns the {@link TypeMirror}s found in the {@code Class[]}-valued attribute {@code
    * memberName} of annotation {@code annoType} on {@code element}.
    *
-   * <p>Unresolvable entries — e.g. generated types that do not yet exist in round 1 — are silently
+   * <p>Unresolvable entries - e.g. generated types that do not yet exist in round 1 - are silently
    * skipped, preserving the existing processor behaviour.
    *
    * @return an empty list if the annotation or the attribute is absent
@@ -89,7 +89,7 @@ final class AnnotationUtils {
           if (val instanceof TypeMirror typeMirror) {
             result.add(typeMirror);
           }
-          // else: unresolvable type (e.g. CucumberDaggerModule before generation) — skip
+          // else: unresolvable type (e.g. CucumberDaggerModule before generation) - skip
         }
         return result;
       }

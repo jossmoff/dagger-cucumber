@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  *
  * <p>Exactly one interface in the test classpath must carry this annotation. The annotated
  * interface must be annotated with {@link dagger.Component}; only application-specific modules need
- * to be listed in {@code modules} — the processor automatically includes the generated {@code
+ * to be listed in {@code modules} - the processor automatically includes the generated {@code
  * CucumberDaggerModule} in the wrapper component it generates.
  *
  * <p>A typical declaration looks like:
@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
  * @CucumberDaggerConfiguration
  * @Singleton
  * @Component(modules = {PriceListModule.class})
- * public interface AppComponent {}
+ * public interface IntegrationTestConfig {}
  * }</pre>
  *
  * <p>The annotation processor uses this annotation to locate the root component and generate the

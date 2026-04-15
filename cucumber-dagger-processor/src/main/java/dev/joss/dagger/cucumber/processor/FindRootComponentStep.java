@@ -9,7 +9,7 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 
 /**
- * Pipeline step 1 — locates and validates the {@code @CucumberDaggerConfiguration} root component.
+ * Pipeline step 1 - locates and validates the {@code @CucumberDaggerConfiguration} root component.
  *
  * <p>Validation rules:
  *

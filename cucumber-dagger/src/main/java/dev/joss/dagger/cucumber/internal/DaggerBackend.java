@@ -1,13 +1,12 @@
 package dev.joss.dagger.cucumber.internal;
 
+import dev.joss.dagger.cucumber.api.ComponentResolver;
 import dev.joss.dagger.cucumber.api.CucumberDaggerComponent;
-import dev.joss.dagger.cucumber.api.ScenarioScopedComponent;
 import io.cucumber.core.backend.Backend;
 import io.cucumber.core.backend.Container;
 import io.cucumber.core.backend.Glue;
 import io.cucumber.core.backend.Lookup;
 import io.cucumber.core.backend.Snippet;
-import io.cucumber.core.resource.ClasspathScanner;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -31,11 +30,9 @@ import java.util.function.Supplier;
  *       service file to locate the Dagger-generated root component factory class ({@code
  *       DaggerXxx}) and calls its static {@code create()} method to obtain the root component
  *       instance.
- *   <li>Resolves the generated {@code GeneratedScopedComponent} interface, preferring the
- *       annotation-processor-generated {@code ScenarioScopedComponentAccessor} and falling back to
- *       a classpath scan.
- *   <li>Passes both to {@link DaggerObjectFactory#configure} so the object factory can set up
- *       method handles for provision and scenario-scoped objects.
+ *   <li>Loads the annotation-processor-generated {@link ComponentResolver} by its fixed class name
+ *       ({@code dev.joss.dagger.cucumber.generated.GeneratedComponentResolver}).
+ *   <li>Passes both to {@link DaggerObjectFactory#configure}.
  * </ol>
  *
  * <p>{@link #buildWorld()} and {@link #disposeWorld()} delegate directly to {@link
@@ -43,32 +40,30 @@ import java.util.function.Supplier;
  */
 class DaggerBackend implements Backend {
 
-  private static final String ACCESSOR_CLASS =
-      "dev.joss.dagger.cucumber.generated.ScenarioScopedComponentAccessor";
+  private static final String RESOLVER_CLASS =
+      "dev.joss.dagger.cucumber.generated.GeneratedComponentResolver";
   private static final String COMPONENT_SERVICE_FILE =
       "META-INF/services/dev.joss.dagger.cucumber.api.CucumberDaggerComponent";
 
   private final Container container;
-  private final ClasspathScanner classPathScanner;
   private final Supplier<ClassLoader> classLoaderSupplier;
 
   /** Creates a new backend. The {@code _lookup} parameter is required by the SPI but not used. */
   DaggerBackend(Lookup _lookup, Container container, Supplier<ClassLoader> classLoaderSupplier) {
     this.container = container;
     this.classLoaderSupplier = classLoaderSupplier;
-    this.classPathScanner = new ClasspathScanner(classLoaderSupplier);
   }
 
   /**
-   * Loads the root Dagger component and scoped-component interface, then configures the {@link
+   * Loads the root Dagger component and component resolver, then configures the {@link
    * DaggerObjectFactory}. Called once by Cucumber before any scenarios run.
    */
   @Override
-  public void loadGlue(Glue _glue, List<URI> gluePaths) {
+  public void loadGlue(Glue _glue, List<URI> _gluePaths) {
     CucumberDaggerComponent component = loadComponent();
-    Class<? extends ScenarioScopedComponent> scopedInterface = resolveScopedInterface(gluePaths);
+    ComponentResolver resolver = loadResolver();
     container.addClass(component.getClass());
-    getFactory().configure(component, scopedInterface);
+    getFactory().configure(component, resolver);
   }
 
   /** Creates a fresh per-scenario Dagger subcomponent. Called before each scenario. */
@@ -77,20 +72,22 @@ class DaggerBackend implements Backend {
     getFactory().buildWorld();
   }
 
-  /**
-   * Disposes the per-scenario subcomponent and clears cached instances. Called after each scenario.
-   */
+  /** Disposes the per-scenario subcomponent. Called after each scenario. */
   @Override
   public void disposeWorld() {
     getFactory().disposeWorld();
   }
 
+  /** Returns {@code null}; snippet generation is not supported by this backend. */
+  @Override
+  public Snippet getSnippet() {
+    return null;
+  }
+
   /**
    * Returns the registered {@link DaggerObjectFactory}, failing fast if none has been registered.
    *
-   * @throws IllegalStateException if the {@code ObjectFactory} SPI has not been loaded — this
-   *     indicates the service-file entry is missing or Cucumber's service-loader did not run before
-   *     the backend lifecycle methods were called
+   * @throws IllegalStateException if the {@code ObjectFactory} SPI has not been loaded
    */
   private DaggerObjectFactory getFactory() {
     DaggerObjectFactory factory = ObjectFactoryHolder.get();
@@ -101,12 +98,6 @@ class DaggerBackend implements Backend {
               + "(META-INF/services/io.cucumber.core.backend.ObjectFactory).");
     }
     return factory;
-  }
-
-  /** Returns {@code null}; snippet generation is not supported by this backend. */
-  @Override
-  public Snippet getSnippet() {
-    return null;
   }
 
   /**
@@ -142,11 +133,31 @@ class DaggerBackend implements Backend {
               + " does not have a static create() method. "
               + "Dagger only generates create() when all modules have no-arg or static @Provides "
               + "methods and no @BindsInstance parameters are required. "
-              + "If your component requires a builder, this is not yet supported — "
+              + "If your component requires a builder, this is not yet supported - "
               + "see https://github.com/jossmoff/dagger-cucumber/issues for tracking.",
           e);
     } catch (InvocationTargetException | IllegalAccessException e) {
       throw new IllegalStateException("Failed to invoke " + factoryClassName + ".create()", e);
+    }
+  }
+
+  /**
+   * Loads the annotation-processor-generated {@link ComponentResolver} by its fixed class name.
+   *
+   * @throws IllegalStateException if the resolver class is not found on the classpath
+   */
+  private ComponentResolver loadResolver() {
+    try {
+      Class<?> resolverClass = Class.forName(RESOLVER_CLASS, true, classLoaderSupplier.get());
+      return (ComponentResolver) resolverClass.getDeclaredConstructor().newInstance();
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException(
+          "GeneratedComponentResolver not found. "
+              + "Ensure the cucumber-dagger-processor annotationProcessor dependency is configured "
+              + "and @CucumberDaggerConfiguration is present on your root component.",
+          e);
+    } catch (ReflectiveOperationException e) {
+      throw new RuntimeException("Failed to instantiate GeneratedComponentResolver", e);
     }
   }
 
@@ -175,58 +186,5 @@ class DaggerBackend implements Backend {
       throw new IllegalStateException("Failed to read service file: " + COMPONENT_SERVICE_FILE, e);
     }
     return result;
-  }
-
-  /**
-   * Resolves the generated {@code GeneratedScopedComponent} interface class.
-   *
-   * <p>Tries to load the annotation-processor-generated {@code ScenarioScopedComponentAccessor}
-   * first. If that class is not on the classpath (e.g., the processor has not run), falls back to
-   * {@link #scanForScopedComponent(List)}.
-   */
-  @SuppressWarnings("unchecked")
-  private Class<? extends ScenarioScopedComponent> resolveScopedInterface(List<URI> gluePaths) {
-    try {
-      Class<?> accessorClass = Class.forName(ACCESSOR_CLASS, true, classLoaderSupplier.get());
-      Object accessor = accessorClass.getDeclaredConstructor().newInstance();
-      return (Class<? extends ScenarioScopedComponent>)
-          accessorClass.getMethod("getScopedComponentClass").invoke(accessor);
-    } catch (ClassNotFoundException e) {
-      return scanForScopedComponent(gluePaths);
-    } catch (ReflectiveOperationException e) {
-      throw new RuntimeException("Failed to load ScenarioScopedComponentAccessor", e);
-    }
-  }
-
-  /**
-   * Fallback: scans the given glue-path packages for a type (class or interface) that extends
-   * {@link ScenarioScopedComponent}.
-   *
-   * @throws IllegalStateException if no such type is found in any of the glue paths, or if more
-   *     than one is found (which would cause non-deterministic behaviour)
-   */
-  private Class<? extends ScenarioScopedComponent> scanForScopedComponent(List<URI> gluePaths) {
-    List<Class<? extends ScenarioScopedComponent>> allFound = new ArrayList<>();
-    for (URI uri : gluePaths) {
-      if (!"classpath".equals(uri.getScheme())) continue;
-      String path = uri.getSchemeSpecificPart();
-      if (path.startsWith("/")) path = path.substring(1);
-      String packageName = path.replace('/', '.');
-      allFound.addAll(
-          classPathScanner.scanForSubClassesInPackage(packageName, ScenarioScopedComponent.class));
-    }
-    if (allFound.isEmpty()) {
-      throw new IllegalStateException(
-          "No ScenarioScopedComponent type found in glue paths: "
-              + gluePaths
-              + ". Please ensure cucumber-dagger-processor has run.");
-    }
-    if (allFound.size() > 1) {
-      throw new IllegalStateException(
-          "Multiple ScenarioScopedComponent types found in glue paths: "
-              + allFound
-              + ". Only one is expected — please ensure cucumber-dagger-processor has run correctly.");
-    }
-    return allFound.get(0);
   }
 }

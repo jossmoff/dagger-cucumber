@@ -19,3 +19,18 @@ Feature: Basket
     Given a 20% discount is applied
     When I add "cherry" to my basket
     Then my basket total is 40p
+
+  # Provider<T> - the ReceiptFormatter is fetched from its Provider on demand after checkout.
+  Scenario: A receipt can be generated after items are added
+    When I add "apple" to my basket
+    And I add "banana" to my basket
+    Then a receipt is generated
+
+  # @IntoSet - Set<String> is populated from all @Provides @IntoSet methods across all modules.
+  Scenario: Standard payment methods are accepted
+    Then "CARD" is an accepted payment method
+    And "CASH" is an accepted payment method
+
+  # @BindsOptionalOf - Optional<VoucherService> is empty because no binding is provided.
+  Scenario: No voucher service is configured by default
+    Then no voucher service is configured

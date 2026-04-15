@@ -1,15 +1,9 @@
 package dev.joss.dagger.cucumber.internal;
 
+import dev.joss.dagger.cucumber.api.ComponentResolver;
 import dev.joss.dagger.cucumber.api.CucumberDaggerComponent;
 import dev.joss.dagger.cucumber.api.ScenarioScopedComponent;
 import io.cucumber.core.backend.ObjectFactory;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Supplier;
 
 /**
  * Cucumber {@link ObjectFactory} implementation that resolves step definitions and scoped objects
@@ -18,32 +12,26 @@ import java.util.function.Supplier;
  * <p>Lifecycle:
  *
  * <ol>
- *   <li><strong>Construction</strong> — registers itself with {@link ObjectFactoryHolder} so that
+ *   <li><strong>Construction</strong> - registers itself with {@link ObjectFactoryHolder} so that
  *       {@link DaggerBackend} can obtain this instance.
- *   <li><strong>{@link #configure}</strong> — called once by {@link DaggerBackend#loadGlue} with
- *       the root component and the generated scoped-component interface. Sets up method handles for
- *       root-component provision methods and scoped-component provision/step-def methods.
- *   <li><strong>{@link #buildWorld()}</strong> — called before each scenario. Calls {@link
- *       CucumberDaggerComponent#scopedComponentBuilder()} to create a fresh {@link
- *       ScenarioScopedComponent} and binds per-scenario suppliers.
- *   <li><strong>{@link #getInstance}</strong> — resolves a step-definition or scoped object,
- *       caching the result within the current scenario.
- *   <li><strong>{@link #disposeWorld()}</strong> — called after each scenario. Clears the
- *       per-scenario supplier and instance caches.
+ *   <li><strong>{@link #configure}</strong> - called once by {@link DaggerBackend#loadGlue} with
+ *       the root component and the generated {@link ComponentResolver}.
+ *   <li><strong>{@link #buildWorld()}</strong> - called before each scenario. Delegates to {@link
+ *       ComponentResolver#createScoped} to create a fresh per-scenario subcomponent.
+ *   <li><strong>{@link #getInstance}</strong> - resolves a step-definition or scoped object via the
+ *       resolver, checking the scoped component first then the root component.
+ *   <li><strong>{@link #disposeWorld()}</strong> - called after each scenario. Clears the
+ *       per-scenario subcomponent so the next scenario starts clean.
  * </ol>
  */
 public final class DaggerObjectFactory implements ObjectFactory {
 
   private CucumberDaggerComponent rootComponent;
-  private final Map<Class<?>, MethodHandle> rootHandles = new HashMap<>();
-  private final Map<Class<?>, MethodHandle> scopedHandles = new HashMap<>();
+  private ComponentResolver resolver;
 
   @SuppressWarnings(
-      "ThreadLocalUsage") // intentional instance field — prevents cross-factory leakage
-  private final ThreadLocal<Map<Class<?>, Supplier<Object>>> scopedSuppliers = new ThreadLocal<>();
-
-  private final ThreadLocal<Map<Class<?>, Object>> instances =
-      ThreadLocal.withInitial(HashMap::new);
+      "ThreadLocalUsage") // intentional instance field - prevents cross-factory leakage
+  private final ThreadLocal<ScenarioScopedComponent> currentScoped = new ThreadLocal<>();
 
   /** Creates the factory and registers it with {@link ObjectFactoryHolder}. */
   public DaggerObjectFactory() {
@@ -51,72 +39,23 @@ public final class DaggerObjectFactory implements ObjectFactory {
   }
 
   /**
-   * Configures this factory with the root Dagger component and the generated scoped-component
-   * interface.
-   *
-   * <p>Reflectively inspects {@code root}'s interface for zero-argument provision methods and
-   * stores bound method handles for them. Does the same for {@code scopedInterface}, leaving those
-   * handles unbound so they can be rebound to a fresh subcomponent instance each scenario.
+   * Configures this factory with the root Dagger component and the generated component resolver.
    *
    * @param root the root Dagger component instance
-   * @param scopedInterface the generated {@code GeneratedScopedComponent} interface class
+   * @param resolver the generated {@link ComponentResolver} for type dispatch
    */
-  void configure(
-      CucumberDaggerComponent root, Class<? extends ScenarioScopedComponent> scopedInterface) {
+  void configure(CucumberDaggerComponent root, ComponentResolver resolver) {
     this.rootComponent = root;
-    rootHandles.clear();
-    scopedHandles.clear();
-    MethodHandles.Lookup lookup = MethodHandles.lookup();
-
-    Class<?> rootInterface =
-        Arrays.stream(root.getClass().getInterfaces())
-            .filter(
-                i ->
-                    CucumberDaggerComponent.class.isAssignableFrom(i)
-                        && !i.equals(CucumberDaggerComponent.class))
-            .findFirst()
-            .orElseThrow(
-                () ->
-                    new IllegalStateException(
-                        "Root component "
-                            + root.getClass()
-                            + " does not implement a CucumberDaggerComponent sub-interface"));
-    for (Method method : rootInterface.getMethods()) {
-      if (method.getDeclaringClass() == Object.class) continue;
-      if (method.getParameterCount() != 0) continue;
-      if (method.getReturnType().equals(Void.TYPE)) continue;
-      if (ScenarioScopedComponent.Builder.class.isAssignableFrom(method.getReturnType())) continue;
-      try {
-        rootHandles.put(method.getReturnType(), lookup.unreflect(method).bindTo(root));
-      } catch (IllegalAccessException e) {
-        throw new RuntimeException("Failed to unreflect root method: " + method, e);
-      }
-    }
-
-    for (Method method : scopedInterface.getMethods()) {
-      if (method.getDeclaringClass() == Object.class) continue;
-      if (method.getParameterCount() != 0) continue;
-      if (method.getReturnType().equals(Void.TYPE)) continue;
-      if (ScenarioScopedComponent.Builder.class.isAssignableFrom(method.getReturnType())) continue;
-      try {
-        scopedHandles.put(method.getReturnType(), lookup.unreflect(method));
-      } catch (IllegalAccessException e) {
-        throw new RuntimeException("Failed to unreflect scoped method: " + method, e);
-      }
-    }
+    this.resolver = resolver;
   }
 
   /** No-op: the root Dagger component is created once and lives for the whole test run. */
   @Override
-  public void start() {
-    // no-op
-  }
+  public void start() {}
 
-  /** No-op: root component and handles are long-lived for the entire test run. */
+  /** No-op: root component and resolver are long-lived for the entire test run. */
   @Override
-  public void stop() {
-    // no-op: root component and handles are long-lived for the entire test run
-  }
+  public void stop() {}
 
   /**
    * Always returns {@code true}; step-definition classes are resolved lazily via the Dagger graph
@@ -128,81 +67,51 @@ public final class DaggerObjectFactory implements ObjectFactory {
   }
 
   /**
-   * Returns the instance of {@code type} for the current scenario, creating it via the Dagger graph
-   * on first access and caching it for the remainder of the scenario.
+   * Returns the instance of {@code type} for the current scenario. Checks the scoped component
+   * first, then falls back to the root component. Scoped and root caching is delegated to Dagger's
+   * own scope machinery.
+   *
+   * @throws IllegalStateException if {@code type} is not provided by either component
    */
   @Override
   @SuppressWarnings("unchecked")
   public <T> T getInstance(Class<T> type) {
-    return (T) instances.get().computeIfAbsent(type, this::resolve);
+    ScenarioScopedComponent scoped = currentScoped.get();
+    Object instance = scoped != null ? resolver.resolveScoped(type, scoped) : null;
+    if (instance == null) {
+      instance = resolver.resolveRoot(type, rootComponent);
+    }
+    if (instance == null) {
+      throw new IllegalStateException(
+          "Type "
+              + type.getName()
+              + " is not provided by any component."
+              + " Ensure it is a step-definition class with an @Inject constructor,"
+              + " or is bound via @Provides @ScenarioScope in a module listed on your"
+              + " @CucumberDaggerConfiguration component.");
+    }
+    return (T) instance;
   }
 
   /**
    * Called by {@link DaggerBackend#buildWorld()} before each scenario. Creates a fresh {@link
-   * ScenarioScopedComponent} via the root component's builder and binds the scoped provision method
-   * handles to it.
+   * ScenarioScopedComponent} via the resolver.
    */
-  @SuppressWarnings({"rawtypes"})
   void buildWorld() {
-    if (rootComponent == null) {
+    if (resolver == null) {
       throw new IllegalStateException(
           "The cucumber-dagger-processor has not run. "
               + "Please ensure the annotationProcessor dependency is configured "
               + "and @CucumberDaggerConfiguration is present on your root component.");
     }
-    ScenarioScopedComponent.Builder builder = rootComponent.scopedComponentBuilder();
-    ScenarioScopedComponent scoped = builder.build();
-    Map<Class<?>, Supplier<Object>> bound = new HashMap<>();
-    for (Map.Entry<Class<?>, MethodHandle> entry : scopedHandles.entrySet()) {
-      MethodHandle boundHandle = entry.getValue().bindTo(scoped);
-      bound.put(
-          entry.getKey(),
-          () -> {
-            try {
-              return boundHandle.invoke();
-            } catch (Throwable t) {
-              throw new RuntimeException("Failed to invoke scoped provision method", t);
-            }
-          });
-    }
-    scopedSuppliers.set(bound);
-    instances.get().clear();
+    currentScoped.set(resolver.createScoped(rootComponent));
   }
 
   /**
    * Called by {@link DaggerBackend#disposeWorld()} after each scenario. Clears the per-scenario
-   * supplier map and instance cache so that the next scenario starts clean.
+   * subcomponent so that the next scenario starts clean.
    */
   void disposeWorld() {
-    scopedSuppliers.remove();
-    instances.remove();
-  }
-
-  /**
-   * Resolves {@code type} by checking the scoped suppliers first (scenario-scoped objects and step
-   * definitions), then falling back to root-component provision methods.
-   *
-   * @throws IllegalStateException if {@code type} is not provided by either component
-   */
-  private Object resolve(Class<?> type) {
-    Map<Class<?>, Supplier<Object>> scoped = scopedSuppliers.get();
-    if (scoped != null && scoped.containsKey(type)) {
-      return scoped.get(type).get();
-    }
-    if (rootHandles.containsKey(type)) {
-      try {
-        return rootHandles.get(type).invoke();
-      } catch (Throwable t) {
-        throw new RuntimeException("Failed to invoke root provision method for " + type, t);
-      }
-    }
-    throw new IllegalStateException(
-        "Type "
-            + type.getName()
-            + " is not declared on either component."
-            + " Available scoped types: "
-            + (scoped != null ? scoped.keySet() : "[]")
-            + ". Available root types: "
-            + rootHandles.keySet());
+    currentScoped.remove();
   }
 }
