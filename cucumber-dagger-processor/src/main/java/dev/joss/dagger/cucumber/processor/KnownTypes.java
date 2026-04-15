@@ -17,8 +17,8 @@ final class KnownTypes {
   /** {@code dev.joss.dagger.cucumber.api.CucumberDaggerConfiguration} */
   final TypeElement cucumberDaggerConfiguration;
 
-  /** {@code dev.joss.dagger.cucumber.api.ScenarioScoped} */
-  final TypeElement scenarioScoped;
+  /** {@code dev.joss.dagger.cucumber.api.ScenarioScope} */
+  final TypeElement scenarioScope;
 
   /** {@code dagger.Component} */
   final TypeElement daggerComponent;
@@ -30,12 +30,12 @@ final class KnownTypes {
   final TypeElement jakartaInject;
 
   /**
-   * {@code jakarta.inject.Scope} — meta-annotation for scope annotations such as {@code @Singleton}
+   * {@code jakarta.inject.Scope} - meta-annotation for scope annotations such as {@code @Singleton}
    */
   final TypeElement jakartaScope;
 
   /**
-   * {@code jakarta.inject.Qualifier} — meta-annotation for qualifier annotations such as
+   * {@code jakarta.inject.Qualifier} - meta-annotation for qualifier annotations such as
    * {@code @Named}
    */
   final TypeElement jakartaQualifier;
@@ -43,7 +43,7 @@ final class KnownTypes {
   KnownTypes(ProcessingEnvironment processingEnv) {
     Elements elements = processingEnv.getElementUtils();
     cucumberDaggerConfiguration = elements.getTypeElement(API_PKG + ".CucumberDaggerConfiguration");
-    scenarioScoped = elements.getTypeElement(API_PKG + ".ScenarioScoped");
+    scenarioScope = elements.getTypeElement(API_PKG + ".ScenarioScope");
     daggerComponent = elements.getTypeElement("dagger.Component");
     daggerProvides = elements.getTypeElement("dagger.Provides");
     jakartaInject = elements.getTypeElement("jakarta.inject.Inject");

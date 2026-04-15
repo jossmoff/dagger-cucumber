@@ -1,7 +1,7 @@
 package dev.joss.dagger.cucumber.processor.pipeline;
 
 /**
- * Result of a single pipeline step — either a success carrying a typed value, or a failure
+ * Result of a single pipeline step - either a success carrying a typed value, or a failure
  * indicating that one or more compile errors have already been emitted and downstream steps must
  * not run.
  *
@@ -74,7 +74,7 @@ public final class StepResult<T> {
    */
   public T value() {
     if (status == Status.FAILED)
-      throw new IllegalStateException("step failed — no value available");
+      throw new IllegalStateException("step failed - no value available");
     return value;
   }
 }

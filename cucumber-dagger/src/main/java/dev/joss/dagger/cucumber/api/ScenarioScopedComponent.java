@@ -6,8 +6,8 @@ package dev.joss.dagger.cucumber.api;
  * <p>The annotation processor generates a concrete implementation ({@code
  * GeneratedScopedComponent}) in the same package as the {@link
  * CucumberDaggerConfiguration}-annotated component. That generated interface extends this one and
- * declares provision methods for every {@link ScenarioScoped} type and every step-definition class
- * found in the glue package.
+ * declares provision methods for objects bound via {@link ScenarioScope} and every step-definition
+ * class found in the glue package.
  *
  * <p>User code does not normally implement or reference this interface directly.
  */

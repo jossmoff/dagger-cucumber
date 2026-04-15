@@ -7,8 +7,8 @@ package dev.joss.dagger.cucumber.processor.pipeline;
  * StepResult}{@code <O>} that is either:
  *
  * <ul>
- *   <li>A <em>success</em> carrying the output value — the pipeline continues to the next step.
- *   <li>A <em>failure</em> — processing has failed and downstream steps must not run.
+ *   <li>A <em>success</em> carrying the output value - the pipeline continues to the next step.
+ *   <li>A <em>failure</em> - processing has failed and downstream steps must not run.
  * </ul>
  *
  * <p>Making the context a type parameter keeps this interface free of any annotation-processing

@@ -18,6 +18,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
@@ -45,22 +46,22 @@ final class CucumberDaggerGenerator {
   }
 
   /**
-   * Generates all six outputs for the given model. Invoked once per processing round in which a
+   * Generates all outputs for the given model. Invoked once per processing round in which a
    * {@code @CucumberDaggerConfiguration} element is found.
    */
   void generate(ProcessingModel model) {
     generateGeneratedScopedModule(model);
     generateGeneratedScopedComponent(model);
     generateCucumberDaggerModule(model);
-    generateScenarioScopedComponentAccessor(model);
+    generateComponentResolver(model);
     generateCucumberRootComponent(model);
     generateServiceFile(model);
   }
 
   /**
-   * Generates {@code GeneratedScopedModule} — a Dagger {@code @Module} used by {@code
-   * GeneratedScopedComponent}. If the user has provided Style-B scoped modules (containing
-   * {@code @Provides @ScenarioScoped} methods), they are listed in the {@code includes} attribute.
+   * Generates {@code GeneratedScopedModule} - a Dagger {@code @Module} used by {@code
+   * GeneratedScopedComponent}. If the user has provided scoped modules (containing
+   * {@code @Provides @ScenarioScope} methods), they are listed in the {@code includes} attribute.
    */
   private void generateGeneratedScopedModule(ProcessingModel model) {
     AnnotationSpec.Builder moduleAnnotation =
@@ -85,7 +86,7 @@ final class CucumberDaggerGenerator {
   }
 
   /**
-   * Generates {@code GeneratedScopedComponent} — a {@code @ScenarioScoped @Subcomponent} that
+   * Generates {@code GeneratedScopedComponent} - a {@code @ScenarioScope @Subcomponent} that
    * exposes a provision method for every scenario-scoped type and every step-definition class. Also
    * generates the inner {@code Builder} interface.
    */
@@ -96,8 +97,8 @@ final class CucumberDaggerGenerator {
         ClassName.get(model.rootPackage(), "GeneratedScopedComponent");
     ClassName scenarioScopedComponentName = ClassName.get(API_PKG, "ScenarioScopedComponent");
 
-    AnnotationSpec scenarioScopedAnnotation =
-        AnnotationSpec.builder(ClassName.get(API_PKG, "ScenarioScoped")).build();
+    AnnotationSpec scenarioScopeAnnotation =
+        AnnotationSpec.builder(ClassName.get(API_PKG, "ScenarioScope")).build();
     AnnotationSpec subcomponentAnnotation =
         AnnotationSpec.builder(ClassName.get("dagger", "Subcomponent"))
             .addMember("modules", "$T.class", generatedScopedModuleName)
@@ -106,7 +107,7 @@ final class CucumberDaggerGenerator {
     TypeSpec.Builder componentBuilder =
         TypeSpec.interfaceBuilder("GeneratedScopedComponent")
             .addModifiers(Modifier.PUBLIC)
-            .addAnnotation(scenarioScopedAnnotation)
+            .addAnnotation(scenarioScopeAnnotation)
             .addAnnotation(subcomponentAnnotation)
             .addSuperinterface(scenarioScopedComponentName);
 
@@ -144,8 +145,8 @@ final class CucumberDaggerGenerator {
   }
 
   /**
-   * Generates {@code CucumberDaggerModule} — declares {@code GeneratedScopedComponent} as a
-   * subcomponent and provides a raw-type {@code ScenarioScopedComponent.Builder} binding that
+   * Generates {@code CucumberDaggerModule} - declares {@code GeneratedScopedComponent} as a
+   * subcomponent and provides the raw-type {@code ScenarioScopedComponent.Builder} binding that
    * bridges the generated builder to the interface method on {@code CucumberDaggerComponent}.
    */
   private void generateCucumberDaggerModule(ProcessingModel model) {
@@ -189,51 +190,120 @@ final class CucumberDaggerGenerator {
   }
 
   /**
-   * Generates {@code dev.joss.dagger.cucumber.generated.ScenarioScopedComponentAccessor} — a simple
-   * class whose {@code getScopedComponentClass()} method returns the {@code
-   * GeneratedScopedComponent} class literal. The runtime uses this to avoid a classpath scan at
-   * startup.
+   * Generates {@code dev.joss.dagger.cucumber.generated.GeneratedComponentResolver} - a
+   * type-dispatching implementation of {@link dev.joss.dagger.cucumber.api.ComponentResolver} that
+   * replaces all runtime reflection. The generated class:
+   *
+   * <ul>
+   *   <li>{@code createScoped} - delegates to {@code root.scopedComponentBuilder().build()}.
+   *   <li>{@code resolveScoped} - casts to {@code GeneratedScopedComponent} and dispatches via
+   *       {@code if (type == X.class)} chains for scoped and step-def provision methods.
+   *   <li>{@code resolveRoot} - casts to the user's root component interface and dispatches via
+   *       {@code if (type == X.class)} chains for root provision methods.
+   * </ul>
    */
-  private void generateScenarioScopedComponentAccessor(ProcessingModel model) {
+  private void generateComponentResolver(ProcessingModel model) {
+    ClassName componentResolverName = ClassName.get(API_PKG, "ComponentResolver");
+    ClassName cucumberDaggerComponentName = ClassName.get(API_PKG, "CucumberDaggerComponent");
     ClassName scenarioScopedComponentName = ClassName.get(API_PKG, "ScenarioScopedComponent");
     ClassName generatedScopedComponentName =
         ClassName.get(model.rootPackage(), "GeneratedScopedComponent");
+    ClassName rootInterfaceName = ClassName.get(model.rootComponent());
 
-    ParameterizedTypeName returnType =
+    ParameterizedTypeName classWildcard =
         ParameterizedTypeName.get(
-            ClassName.get(Class.class), WildcardTypeName.subtypeOf(scenarioScopedComponentName));
+            ClassName.get(Class.class), WildcardTypeName.subtypeOf(TypeName.OBJECT));
 
-    MethodSpec method =
-        MethodSpec.methodBuilder("getScopedComponentClass")
+    // createScoped
+    MethodSpec createScoped =
+        MethodSpec.methodBuilder("createScoped")
+            .addAnnotation(Override.class)
             .addModifiers(Modifier.PUBLIC)
-            .returns(returnType)
-            .addStatement("return $T.class", generatedScopedComponentName)
+            .returns(scenarioScopedComponentName)
+            .addParameter(cucumberDaggerComponentName, "root")
+            .addStatement("return root.scopedComponentBuilder().build()")
             .build();
 
-    TypeSpec accessorType =
-        TypeSpec.classBuilder("ScenarioScopedComponentAccessor")
+    // resolveScoped
+    MethodSpec.Builder resolveScopedBuilder =
+        MethodSpec.methodBuilder("resolveScoped")
+            .addAnnotation(Override.class)
+            .addModifiers(Modifier.PUBLIC)
+            .returns(Object.class)
+            .addParameter(classWildcard, "type")
+            .addParameter(scenarioScopedComponentName, "scoped");
+
+    resolveScopedBuilder.addStatement(
+        "$T comp = ($T) scoped", generatedScopedComponentName, generatedScopedComponentName);
+    for (Map.Entry<TypeName, String> entry : model.scopedProvisionMethods().entrySet()) {
+      resolveScopedBuilder.addStatement(
+          "if (type == $T.class) return comp.$L()", entry.getKey(), entry.getValue());
+    }
+    for (Map.Entry<TypeName, String> entry : model.stepDefMethods().entrySet()) {
+      resolveScopedBuilder.addStatement(
+          "if (type == $T.class) return comp.$L()", entry.getKey(), entry.getValue());
+    }
+    resolveScopedBuilder.addStatement("return null");
+
+    // resolveRoot
+    MethodSpec.Builder resolveRootBuilder =
+        MethodSpec.methodBuilder("resolveRoot")
+            .addAnnotation(Override.class)
+            .addModifiers(Modifier.PUBLIC)
+            .returns(Object.class)
+            .addParameter(classWildcard, "type")
+            .addParameter(cucumberDaggerComponentName, "root");
+
+    if (!model.rootProvisionMethods().isEmpty()) {
+      resolveRootBuilder.addStatement("$T comp = ($T) root", rootInterfaceName, rootInterfaceName);
+      for (Map.Entry<TypeName, String> entry : model.rootProvisionMethods().entrySet()) {
+        resolveRootBuilder.addStatement(
+            "if (type == $T.class) return comp.$L()", entry.getKey(), entry.getValue());
+      }
+    }
+    resolveRootBuilder.addStatement("return null");
+
+    TypeSpec resolverType =
+        TypeSpec.classBuilder("GeneratedComponentResolver")
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-            .addMethod(method)
+            .addSuperinterface(componentResolverName)
+            .addMethod(createScoped)
+            .addMethod(resolveScopedBuilder.build())
+            .addMethod(resolveRootBuilder.build())
             .build();
 
-    writeJavaFile(GENERATED_PKG, accessorType, model.rootComponent());
+    writeJavaFile(GENERATED_PKG, resolverType, model.rootComponent());
   }
 
   /**
-   * Generates {@code GeneratedCucumber{UserSimpleName}} — a wrapper {@code @Component} that
-   * combines the user's modules with the generated {@code CucumberDaggerModule}. Users do not need
-   * to include {@code CucumberDaggerModule} themselves.
+   * Generates {@code GeneratedCucumber{UserSimpleName}} - a wrapper {@code @Component} that
+   * combines the user's modules with the generated {@code CucumberDaggerModule}. The wrapper also
+   * extends the user's root component interface so that Dagger generates implementations for its
+   * provision methods, enabling type-safe dispatch in {@code GeneratedComponentResolver}.
    */
   private void generateCucumberRootComponent(ProcessingModel model) {
     ClassName cucumberDaggerComponentName = ClassName.get(API_PKG, "CucumberDaggerComponent");
     ClassName cucumberDaggerModuleName = ClassName.get(model.rootPackage(), "CucumberDaggerModule");
 
-    CodeBlock.Builder modulesBlock = CodeBlock.builder().add("{");
-    for (int i = 0; i < model.userModules().size(); i++) {
-      if (i > 0) modulesBlock.add(", ");
-      modulesBlock.add("$T.class", TypeName.get(model.userModules().get(i)));
+    // Scoped modules are included by GeneratedScopedModule (subcomponent) - exclude them here to
+    // avoid Dagger's "module repeated in subcomponent" error.
+    Set<String> scopedModuleNames = new HashSet<>();
+    for (TypeElement m : model.userScopedModules()) {
+      scopedModuleNames.add(m.getQualifiedName().toString());
     }
-    if (!model.userModules().isEmpty()) modulesBlock.add(", ");
+
+    CodeBlock.Builder modulesBlock = CodeBlock.builder().add("{");
+    boolean first = true;
+    for (TypeMirror moduleMirror : model.userModules()) {
+      TypeElement moduleElement =
+          (TypeElement) processingEnv.getTypeUtils().asElement(moduleMirror);
+      if (moduleElement != null
+          && scopedModuleNames.contains(moduleElement.getQualifiedName().toString())) continue;
+      if (!first) modulesBlock.add(", ");
+      first = false;
+      modulesBlock.add("$T.class", TypeName.get(moduleMirror));
+    }
+    if (!first) modulesBlock.add(", ");
     modulesBlock.add("$T.class}", cucumberDaggerModuleName);
 
     AnnotationSpec componentAnnotation =
@@ -246,7 +316,8 @@ final class CucumberDaggerGenerator {
         TypeSpec.interfaceBuilder("GeneratedCucumber" + simpleName)
             .addModifiers(Modifier.PUBLIC)
             .addAnnotation(componentAnnotation)
-            .addSuperinterface(cucumberDaggerComponentName);
+            .addSuperinterface(cucumberDaggerComponentName)
+            .addSuperinterface(ClassName.get(model.rootComponent()));
 
     for (AnnotationMirror scope : model.scopeAnnotations()) {
       builder.addAnnotation(AnnotationSpec.get(scope));
@@ -290,10 +361,9 @@ final class CucumberDaggerGenerator {
 
   /**
    * Writes a generated Java source file to the filer. Skips the filer write silently if a file with
-   * the same qualified name has already been generated in a prior processing round (explicit
-   * duplicate tracking replaces {@link javax.annotation.processing.FilerException} swallowing).
-   * Passes {@code originatingElement} to {@link javax.annotation.processing.Filer#createSourceFile}
-   * to improve incremental compilation behaviour in IDEs and build tools.
+   * the same qualified name has already been generated in a prior processing round. Passes {@code
+   * originatingElement} to {@link javax.annotation.processing.Filer#createSourceFile} to improve
+   * incremental compilation behaviour in IDEs and build tools.
    */
   private void writeJavaFile(
       String packageName, TypeSpec typeSpec, TypeElement originatingElement) {

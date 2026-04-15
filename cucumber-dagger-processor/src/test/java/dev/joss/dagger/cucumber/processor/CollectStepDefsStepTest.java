@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.JavaFileObjects;
 import dev.joss.dagger.cucumber.processor.pipeline.StepResult;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
@@ -33,8 +32,8 @@ class CollectStepDefsStepTest {
             ctx -> {
               TypeElement root =
                   ctx.processingEnv.getElementUtils().getTypeElement("test.AppComponent");
-              CollectedScopedClasses previous = new CollectedScopedClasses(root, "test", List.of());
-              captured.set(new CollectStepDefsStep().execute(ctx, previous));
+              captured.set(
+                  new CollectStepDefsStep().execute(ctx, new FoundRootComponent(root, "test")));
             },
             APP_COMPONENT,
             JavaFileObjects.forSourceLines(
@@ -60,8 +59,8 @@ class CollectStepDefsStepTest {
             ctx -> {
               TypeElement root =
                   ctx.processingEnv.getElementUtils().getTypeElement("test.AppComponent");
-              CollectedScopedClasses previous = new CollectedScopedClasses(root, "test", List.of());
-              captured.set(new CollectStepDefsStep().execute(ctx, previous));
+              captured.set(
+                  new CollectStepDefsStep().execute(ctx, new FoundRootComponent(root, "test")));
             },
             APP_COMPONENT,
             JavaFileObjects.forSourceLines(
@@ -78,37 +77,6 @@ class CollectStepDefsStepTest {
   }
 
   @Test
-  void injectConstructorOfScopedClassExcluded() {
-    AtomicReference<StepResult<CollectedStepDefs>> captured = new AtomicReference<>();
-
-    Compilation compilation =
-        StepTestSupport.compile(
-            ctx -> {
-              TypeElement root =
-                  ctx.processingEnv.getElementUtils().getTypeElement("test.AppComponent");
-              TypeElement scoped =
-                  ctx.processingEnv.getElementUtils().getTypeElement("test.MyScoped");
-              CollectedScopedClasses previous =
-                  new CollectedScopedClasses(root, "test", List.of(scoped));
-              captured.set(new CollectStepDefsStep().execute(ctx, previous));
-            },
-            APP_COMPONENT,
-            JavaFileObjects.forSourceLines(
-                "test.MyScoped",
-                "package test;",
-                "import dev.joss.dagger.cucumber.api.ScenarioScoped;",
-                "import jakarta.inject.Inject;",
-                "@ScenarioScoped",
-                "public class MyScoped {",
-                "  @Inject public MyScoped() {}",
-                "}"));
-
-    assertThat(compilation).succeeded();
-    assertThat(captured.get().isFailed()).isFalse();
-    assertThat(captured.get().value().stepDefMethods()).isEmpty();
-  }
-
-  @Test
   void noInjectAnnotatedElementsReturnsEmptyStepDefs() {
     AtomicReference<StepResult<CollectedStepDefs>> captured = new AtomicReference<>();
 
@@ -117,8 +85,8 @@ class CollectStepDefsStepTest {
             ctx -> {
               TypeElement root =
                   ctx.processingEnv.getElementUtils().getTypeElement("test.AppComponent");
-              CollectedScopedClasses previous = new CollectedScopedClasses(root, "test", List.of());
-              captured.set(new CollectStepDefsStep().execute(ctx, previous));
+              captured.set(
+                  new CollectStepDefsStep().execute(ctx, new FoundRootComponent(root, "test")));
             },
             APP_COMPONENT);
 
