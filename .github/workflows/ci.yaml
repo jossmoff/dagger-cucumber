@@ -23,6 +23,8 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
 
       - name: Build & Test
         run: ./gradlew build --parallel
