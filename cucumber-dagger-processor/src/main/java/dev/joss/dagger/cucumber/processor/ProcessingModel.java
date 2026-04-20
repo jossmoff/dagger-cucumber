@@ -1,6 +1,6 @@
 package dev.joss.dagger.cucumber.processor;
 
-import com.squareup.javapoet.TypeName;
+import com.palantir.javapoet.TypeName;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

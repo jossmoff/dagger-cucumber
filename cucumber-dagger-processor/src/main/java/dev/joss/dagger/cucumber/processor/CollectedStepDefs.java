@@ -1,6 +1,6 @@
 package dev.joss.dagger.cucumber.processor;
 
-import com.squareup.javapoet.TypeName;
+import com.palantir.javapoet.TypeName;
 import java.util.Map;
 import javax.lang.model.element.TypeElement;
 
