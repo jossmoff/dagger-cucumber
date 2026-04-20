@@ -22,9 +22,7 @@ jobs:
           java-version: 21
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-read-only: false
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Build & Test
         run: ./gradlew build --parallel
