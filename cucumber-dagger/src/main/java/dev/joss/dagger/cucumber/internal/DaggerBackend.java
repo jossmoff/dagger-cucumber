@@ -110,11 +110,12 @@ class DaggerBackend implements Backend {
    *   <li>{@code create()} - used when the component has no {@code @Component.Builder} (the common
    *       case; Dagger only generates this method when no {@code @BindsInstance} setters are
    *       required).
-   *   <li>{@code builder().build()} - used when the component declares a {@code @Component.Builder}
-   *       inner interface, causing Dagger to generate a {@code builder()} factory instead of (or in
-   *       addition to) {@code create()}. The builder must be usable with no explicit setter calls
+   *   <li>{@code builder().<terminal>()} - used when the component declares a
+   *       {@code @Component.Builder} inner interface, causing Dagger to generate a {@code
+   *       builder()} factory instead of (or in addition to) {@code create()}. The builder must be
+   *       usable with no explicit setter calls, and its zero-argument terminal method name may vary
    *       (no-arg builder contract: all {@code @BindsInstance} parameters must be {@code @Nullable}
-   *       so that {@code build()} succeeds without setting them).
+   *       so that the terminal method succeeds without setting them).
    * </ol>
    *
    * @throws IllegalStateException if no service entry is found, more than one is found, or neither
@@ -159,10 +160,10 @@ class DaggerBackend implements Backend {
     }
 
     // Strategy 2: builder().<terminal>() - present when @Component.Builder is declared.
-    // The terminal method name is not required to be "build()", so we locate it by finding the
-    // zero-arg public method on the builder interface whose return type is assignable to
-    // CucumberDaggerComponent. The lookup is done on the builder interface type (the return type
-    // of builder()), not the concrete implementation, so no setAccessible is needed.
+    // The terminal method is not required to be named "build"; we locate it dynamically by finding
+    // the zero-arg public method on the builder interface whose return type is assignable to
+    // CucumberDaggerComponent. Lookup on the interface type (return type of builder()) avoids
+    // needing setAccessible on the concrete implementation.
     Method builderMethod;
     try {
       builderMethod = factoryClass.getMethod("builder");

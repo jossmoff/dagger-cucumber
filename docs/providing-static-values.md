@@ -81,7 +81,12 @@ For parallel execution replace the field with a `ThreadLocal`:
 private final ThreadLocal<Scenario> holder = new ThreadLocal<>();
 
 public void set(Scenario s) { holder.set(s); }
-public Scenario get() { return holder.get(); }
+
+public Scenario get() {
+    Scenario scenario = holder.get();
+    if (scenario == null) throw new IllegalStateException("ScenarioHolder not populated");
+    return scenario;
+}
 
 @After
 public void clear() { holder.remove(); }
