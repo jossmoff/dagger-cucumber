@@ -202,9 +202,9 @@ final class CucumberDaggerGenerator {
    *       {@code if (type == X.class)} chains for root provision methods.
    * </ul>
    *
-   * <p>Root component instantiation (create vs builder) is handled at runtime by {@link
-   * dev.joss.dagger.cucumber.internal.DaggerBackend} using the strategy recorded in the service
-   * file.
+   * <p>Root component instantiation is handled at runtime by {@link
+   * dev.joss.dagger.cucumber.internal.DaggerBackend}; the service file identifies the generated
+   * factory class, and the runtime determines which instantiation path to use.
    */
   private void generateComponentResolver(ProcessingModel model) {
     ClassName componentResolverName = ClassName.get(API_PKG, "ComponentResolver");
@@ -340,7 +340,7 @@ final class CucumberDaggerGenerator {
     // generates builder() on DaggerGeneratedCucumber{Name} instead of only create().
     if (model.componentBuilder() != null) {
       ClassName wrapperName = ClassName.get(model.rootPackage(), wrapperSimpleName);
-      ClassName userBuilderName = ClassName.get(model.rootComponent()).nestedClass("Builder");
+      ClassName userBuilderName = ClassName.get(model.componentBuilder());
       TypeSpec wrapperBuilderInterface =
           TypeSpec.interfaceBuilder("Builder")
               .addAnnotation(

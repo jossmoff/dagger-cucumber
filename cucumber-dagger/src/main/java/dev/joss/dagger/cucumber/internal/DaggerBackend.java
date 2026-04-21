@@ -158,14 +158,14 @@ class DaggerBackend implements Backend {
       throw new IllegalStateException("Failed to invoke " + factoryClassName + ".create()", e);
     }
 
-    // Strategy 2: builder().build() - present when @Component.Builder is declared.
-    // build() is looked up on the public Builder interface (the return type of builder()), not on
-    // the concrete implementation class, so no setAccessible is needed.
+    // Strategy 2: builder().<terminal>() - present when @Component.Builder is declared.
+    // The terminal method name is not required to be "build()", so we locate it by finding the
+    // zero-arg public method on the builder interface whose return type is assignable to
+    // CucumberDaggerComponent. The lookup is done on the builder interface type (the return type
+    // of builder()), not the concrete implementation, so no setAccessible is needed.
+    Method builderMethod;
     try {
-      Method builderMethod = factoryClass.getMethod("builder");
-      Object builder = builderMethod.invoke(null);
-      Method buildMethod = builderMethod.getReturnType().getMethod("build");
-      return (CucumberDaggerComponent) buildMethod.invoke(builder);
+      builderMethod = factoryClass.getMethod("builder");
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException(
           factoryClassName
@@ -173,12 +173,31 @@ class DaggerBackend implements Backend {
               + "Dagger generates create() when all modules have no-arg or static @Provides "
               + "methods and no @BindsInstance parameters are required. "
               + "If your component uses @Component.Builder, ensure it is detectable by the "
-              + "cucumber-dagger-processor and that builder().build() succeeds without "
+              + "cucumber-dagger-processor and that builder().<terminal>() succeeds without "
               + "explicit @BindsInstance setter calls (no-arg builder contract).",
           e);
+    }
+    try {
+      Object builder = builderMethod.invoke(null);
+      Class<?> builderType = builderMethod.getReturnType();
+      Method terminalMethod = null;
+      for (Method m : builderType.getMethods()) {
+        if (m.getParameterCount() == 0
+            && CucumberDaggerComponent.class.isAssignableFrom(m.getReturnType())) {
+          terminalMethod = m;
+          break;
+        }
+      }
+      if (terminalMethod == null) {
+        throw new IllegalStateException(
+            "No zero-arg terminal method returning a CucumberDaggerComponent found on "
+                + builderType.getName()
+                + ". Ensure the @Component.Builder terminal method takes no arguments.");
+      }
+      return (CucumberDaggerComponent) terminalMethod.invoke(builder);
     } catch (InvocationTargetException | IllegalAccessException e) {
       throw new IllegalStateException(
-          "Failed to invoke " + factoryClassName + ".builder().build()", e);
+          "Failed to invoke " + factoryClassName + ".builder().<terminal>()", e);
     }
   }
 
