@@ -233,6 +233,61 @@ class CucumberDaggerProcessorTest {
   }
 
   @Test
+  void componentBuilderGeneratesBuilderInWrapper() {
+    Compilation compilation =
+        compile(
+            JavaFileObjects.forSourceLines(
+                "test.AppComponent",
+                "package test;",
+                "import dagger.Component;",
+                "import dev.joss.dagger.cucumber.api.CucumberDaggerConfiguration;",
+                "@CucumberDaggerConfiguration",
+                "@Component(modules = {})",
+                "public interface AppComponent {",
+                "  @Component.Builder",
+                "  interface Builder {",
+                "    AppComponent build();",
+                "  }",
+                "}"));
+
+    assertThat(compilation).succeeded();
+    // Generated wrapper must declare an inner @Component.Builder extending AppComponent.Builder
+    assertThat(compilation)
+        .generatedSourceFile("test.GeneratedCucumberAppComponent")
+        .contentsAsUtf8String()
+        .contains("@Component.Builder");
+    assertThat(compilation)
+        .generatedSourceFile("test.GeneratedCucumberAppComponent")
+        .contentsAsUtf8String()
+        .contains("AppComponent.Builder");
+    // build() return type must be the wrapper type, not the user's interface type
+    assertThat(compilation)
+        .generatedSourceFile("test.GeneratedCucumberAppComponent")
+        .contentsAsUtf8String()
+        .contains("GeneratedCucumberAppComponent build()");
+  }
+
+  @Test
+  void componentWithoutBuilderHasNoBuilderInWrapper() {
+    Compilation compilation =
+        compile(
+            JavaFileObjects.forSourceLines(
+                "test.AppComponent",
+                "package test;",
+                "import dagger.Component;",
+                "import dev.joss.dagger.cucumber.api.CucumberDaggerConfiguration;",
+                "@CucumberDaggerConfiguration",
+                "@Component(modules = {})",
+                "public interface AppComponent {}"));
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation)
+        .generatedSourceFile("test.GeneratedCucumberAppComponent")
+        .contentsAsUtf8String()
+        .doesNotContain("@Component.Builder");
+  }
+
+  @Test
   void qualifiedScenarioScopeProviderMethodEmitsCompileError() {
     Compilation compilation =
         compile(

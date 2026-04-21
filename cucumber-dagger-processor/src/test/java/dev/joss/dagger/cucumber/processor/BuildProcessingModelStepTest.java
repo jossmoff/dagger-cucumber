@@ -22,7 +22,8 @@ class BuildProcessingModelStepTest {
             ctx -> {
               TypeElement root =
                   ctx.processingEnv.getElementUtils().getTypeElement("test.AppComponent");
-              CollectedStepDefs input = new CollectedStepDefs(root, "test", new LinkedHashMap<>());
+              CollectedStepDefs input =
+                  new CollectedStepDefs(root, "test", new LinkedHashMap<>(), null);
               captured.set(new BuildProcessingModelStep().execute(ctx, input));
             },
             JavaFileObjects.forSourceLines(
@@ -53,7 +54,8 @@ class BuildProcessingModelStepTest {
             ctx -> {
               TypeElement root =
                   ctx.processingEnv.getElementUtils().getTypeElement("test.AppComponent");
-              CollectedStepDefs input = new CollectedStepDefs(root, "test", new LinkedHashMap<>());
+              CollectedStepDefs input =
+                  new CollectedStepDefs(root, "test", new LinkedHashMap<>(), null);
               captured.set(new BuildProcessingModelStep().execute(ctx, input));
             },
             JavaFileObjects.forSourceLines(
@@ -83,7 +85,8 @@ class BuildProcessingModelStepTest {
             ctx -> {
               TypeElement root =
                   ctx.processingEnv.getElementUtils().getTypeElement("test.AppComponent");
-              CollectedStepDefs input = new CollectedStepDefs(root, "test", new LinkedHashMap<>());
+              CollectedStepDefs input =
+                  new CollectedStepDefs(root, "test", new LinkedHashMap<>(), null);
               captured.set(new BuildProcessingModelStep().execute(ctx, input));
             },
             JavaFileObjects.forSourceLines(
@@ -126,7 +129,8 @@ class BuildProcessingModelStepTest {
             ctx -> {
               TypeElement root =
                   ctx.processingEnv.getElementUtils().getTypeElement("test.AppComponent");
-              CollectedStepDefs input = new CollectedStepDefs(root, "test", new LinkedHashMap<>());
+              CollectedStepDefs input =
+                  new CollectedStepDefs(root, "test", new LinkedHashMap<>(), null);
               captured.set(new BuildProcessingModelStep().execute(ctx, input));
             },
             JavaFileObjects.forSourceLines(
@@ -167,7 +171,8 @@ class BuildProcessingModelStepTest {
             ctx -> {
               TypeElement root =
                   ctx.processingEnv.getElementUtils().getTypeElement("test.AppComponent");
-              CollectedStepDefs input = new CollectedStepDefs(root, "test", new LinkedHashMap<>());
+              CollectedStepDefs input =
+                  new CollectedStepDefs(root, "test", new LinkedHashMap<>(), null);
               captured.set(new BuildProcessingModelStep().execute(ctx, input));
             },
             JavaFileObjects.forSourceLines(
@@ -199,7 +204,8 @@ class BuildProcessingModelStepTest {
             ctx -> {
               TypeElement root =
                   ctx.processingEnv.getElementUtils().getTypeElement("test.AppComponent");
-              CollectedStepDefs input = new CollectedStepDefs(root, "test", new LinkedHashMap<>());
+              CollectedStepDefs input =
+                  new CollectedStepDefs(root, "test", new LinkedHashMap<>(), null);
               captured.set(new BuildProcessingModelStep().execute(ctx, input));
             },
             JavaFileObjects.forSourceLines(
@@ -225,7 +231,8 @@ class BuildProcessingModelStepTest {
             ctx -> {
               TypeElement root =
                   ctx.processingEnv.getElementUtils().getTypeElement("test.AppComponent");
-              CollectedStepDefs input = new CollectedStepDefs(root, "test", new LinkedHashMap<>());
+              CollectedStepDefs input =
+                  new CollectedStepDefs(root, "test", new LinkedHashMap<>(), null);
               captured.set(new BuildProcessingModelStep().execute(ctx, input));
             },
             JavaFileObjects.forSourceLines(

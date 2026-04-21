@@ -25,6 +25,8 @@ import java.util.Set;
  *       automatically when a {@code VoucherService} binding is added to the graph.
  *   <li>{@code Set<String> acceptedPaymentMethods} - collected from all {@code @IntoSet} bindings
  *       for {@code String} declared across all modules.
+ *   <li>{@code ReceiptFormatter} (via {@code Provider}) - uses the {@code @Named("storeName")}
+ *       singleton resolved from the {@code @BindsInstance} value on the component builder.
  * </ul>
  */
 public final class CheckoutSteps {
@@ -82,6 +84,14 @@ public final class CheckoutSteps {
   public void aReceiptIsGenerated() {
     String receipt = receiptFormatter.get().format(basket.itemCount(), basket.total());
     assertThat(receipt).isNotEmpty();
+  }
+
+  // @BindsInstance - storeName is injected via the component builder and threaded through to the
+  // formatter. The default value comes from System.getProperty("store.name", "Test Store").
+  @Then("the receipt header shows {string}")
+  public void theReceiptHeaderShows(String expectedStoreName) {
+    String receipt = receiptFormatter.get().format(basket.itemCount(), basket.total());
+    assertThat(receipt).startsWith("[" + expectedStoreName + "]");
   }
 
   // Set<T> multibinding - the set is populated at compile time from all @IntoSet methods.

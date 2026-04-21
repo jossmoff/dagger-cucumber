@@ -23,6 +23,9 @@ final class KnownTypes {
   /** {@code dagger.Component} */
   final TypeElement daggerComponent;
 
+  /** {@code dagger.Component.Builder} - inner annotation type inside {@code dagger.Component} */
+  final TypeElement daggerComponentBuilder;
+
   /** {@code dagger.Provides} */
   final TypeElement daggerProvides;
 
@@ -45,6 +48,7 @@ final class KnownTypes {
     cucumberDaggerConfiguration = elements.getTypeElement(API_PKG + ".CucumberDaggerConfiguration");
     scenarioScope = elements.getTypeElement(API_PKG + ".ScenarioScope");
     daggerComponent = elements.getTypeElement("dagger.Component");
+    daggerComponentBuilder = elements.getTypeElement("dagger.Component.Builder");
     daggerProvides = elements.getTypeElement("dagger.Provides");
     jakartaInject = elements.getTypeElement("jakarta.inject.Inject");
     jakartaScope = elements.getTypeElement("jakarta.inject.Scope");

@@ -28,8 +28,8 @@ import java.util.function.Supplier;
  * <ol>
  *   <li>Reads the {@code META-INF/services/dev.joss.dagger.cucumber.api.CucumberDaggerComponent}
  *       service file to locate the Dagger-generated root component factory class ({@code
- *       DaggerXxx}) and calls its static {@code create()} method to obtain the root component
- *       instance.
+ *       DaggerXxx}) and calls its static {@code create()} method, or falls back to {@code
+ *       builder().build()} when the component declares a {@code @Component.Builder}.
  *   <li>Loads the annotation-processor-generated {@link ComponentResolver} by its fixed class name
  *       ({@code dev.joss.dagger.cucumber.generated.GeneratedComponentResolver}).
  *   <li>Passes both to {@link DaggerObjectFactory#configure}.
@@ -101,11 +101,24 @@ class DaggerBackend implements Backend {
   }
 
   /**
-   * Reads the component service file, loads the Dagger-generated factory class by name, and calls
-   * its static {@code create()} method to obtain the root {@link CucumberDaggerComponent} instance.
+   * Reads the component service file, loads the Dagger-generated factory class by name, and
+   * instantiates the root component.
    *
-   * @throws IllegalStateException if no service entry is found, more than one is found, or the
-   *     factory cannot be invoked
+   * <p>Two construction strategies are attempted in order:
+   *
+   * <ol>
+   *   <li>{@code create()} - used when the component has no {@code @Component.Builder} (the common
+   *       case; Dagger only generates this method when no {@code @BindsInstance} setters are
+   *       required).
+   *   <li>{@code builder().build()} - used when the component declares a {@code @Component.Builder}
+   *       inner interface, causing Dagger to generate a {@code builder()} factory instead of (or in
+   *       addition to) {@code create()}. The builder must be usable with no explicit setter calls
+   *       (no-arg builder contract: all {@code @BindsInstance} parameters must be {@code @Nullable}
+   *       so that {@code build()} succeeds without setting them).
+   * </ol>
+   *
+   * @throws IllegalStateException if no service entry is found, more than one is found, or neither
+   *     instantiation strategy succeeds
    */
   private CucumberDaggerComponent loadComponent() {
     ClassLoader cl = classLoaderSupplier.get();
@@ -123,21 +136,49 @@ class DaggerBackend implements Backend {
     String factoryClassName = classNames.getFirst();
     try {
       Class<?> factoryClass = Class.forName(factoryClassName, true, cl);
-      Method createMethod = factoryClass.getMethod("create");
-      return (CucumberDaggerComponent) createMethod.invoke(null);
+      return instantiateComponent(factoryClass, factoryClassName);
     } catch (ClassNotFoundException e) {
       throw new IllegalStateException("Could not load component class: " + factoryClassName, e);
+    }
+  }
+
+  /**
+   * Tries {@code create()} first, then falls back to {@code builder().build()} when the component
+   * was generated with a {@code @Component.Builder}.
+   */
+  private static CucumberDaggerComponent instantiateComponent(
+      Class<?> factoryClass, String factoryClassName) {
+    // Strategy 1: static create() - present when no @Component.Builder with required @BindsInstance
+    try {
+      Method createMethod = factoryClass.getMethod("create");
+      return (CucumberDaggerComponent) createMethod.invoke(null);
+    } catch (NoSuchMethodException ignored) {
+      // fall through to builder strategy
+    } catch (InvocationTargetException | IllegalAccessException e) {
+      throw new IllegalStateException("Failed to invoke " + factoryClassName + ".create()", e);
+    }
+
+    // Strategy 2: builder().build() - present when @Component.Builder is declared.
+    // build() is looked up on the public Builder interface (the return type of builder()), not on
+    // the concrete implementation class, so no setAccessible is needed.
+    try {
+      Method builderMethod = factoryClass.getMethod("builder");
+      Object builder = builderMethod.invoke(null);
+      Method buildMethod = builderMethod.getReturnType().getMethod("build");
+      return (CucumberDaggerComponent) buildMethod.invoke(builder);
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException(
           factoryClassName
-              + " does not have a static create() method. "
-              + "Dagger only generates create() when all modules have no-arg or static @Provides "
+              + " has neither a static create() nor a static builder() method. "
+              + "Dagger generates create() when all modules have no-arg or static @Provides "
               + "methods and no @BindsInstance parameters are required. "
-              + "If your component requires a builder, this is not yet supported - "
-              + "see https://github.com/jossmoff/dagger-cucumber/issues for tracking.",
+              + "If your component uses @Component.Builder, ensure it is detectable by the "
+              + "cucumber-dagger-processor and that builder().build() succeeds without "
+              + "explicit @BindsInstance setter calls (no-arg builder contract).",
           e);
     } catch (InvocationTargetException | IllegalAccessException e) {
-      throw new IllegalStateException("Failed to invoke " + factoryClassName + ".create()", e);
+      throw new IllegalStateException(
+          "Failed to invoke " + factoryClassName + ".builder().build()", e);
     }
   }
 

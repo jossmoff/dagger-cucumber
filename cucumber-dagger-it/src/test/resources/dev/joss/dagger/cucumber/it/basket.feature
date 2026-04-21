@@ -34,3 +34,11 @@ Feature: Basket
   # @BindsOptionalOf - Optional<VoucherService> is empty because no binding is provided.
   Scenario: No voucher service is configured by default
     Then no voucher service is configured
+
+  # @Component.Builder + @BindsInstance - storeName is injected via the component builder.
+  # The runtime calls builder().build() without setting any values, so the @Provides method in
+  # PriceListModule falls back to System.getProperty("store.name", "Test Store").
+  Scenario: The receipt header shows the store name from the component builder
+    When I add "apple" to my basket
+    And I add "banana" to my basket
+    Then the receipt header shows "Test Store"

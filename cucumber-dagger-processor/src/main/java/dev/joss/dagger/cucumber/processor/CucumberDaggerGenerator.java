@@ -201,6 +201,10 @@ final class CucumberDaggerGenerator {
    *   <li>{@code resolveRoot} - casts to the user's root component interface and dispatches via
    *       {@code if (type == X.class)} chains for root provision methods.
    * </ul>
+   *
+   * <p>Root component instantiation (create vs builder) is handled at runtime by {@link
+   * dev.joss.dagger.cucumber.internal.DaggerBackend} using the strategy recorded in the service
+   * file.
    */
   private void generateComponentResolver(ProcessingModel model) {
     ClassName componentResolverName = ClassName.get(API_PKG, "ComponentResolver");
@@ -280,6 +284,13 @@ final class CucumberDaggerGenerator {
    * combines the user's modules with the generated {@code CucumberDaggerModule}. The wrapper also
    * extends the user's root component interface so that Dagger generates implementations for its
    * provision methods, enabling type-safe dispatch in {@code GeneratedComponentResolver}.
+   *
+   * <p>When the user's root component declares a {@code @Component.Builder} inner interface, the
+   * generated wrapper includes a matching {@code @Component.Builder} that extends the user's
+   * builder with a covariant {@code build()} return type. This causes Dagger to generate a {@code
+   * builder()} factory on the {@code DaggerXxx} class; at runtime {@link
+   * dev.joss.dagger.cucumber.internal.DaggerBackend} falls back to {@code builder().build()} when
+   * no {@code create()} is present.
    */
   private void generateCucumberRootComponent(ProcessingModel model) {
     ClassName cucumberDaggerComponentName = ClassName.get(API_PKG, "CucumberDaggerComponent");
@@ -312,8 +323,9 @@ final class CucumberDaggerGenerator {
             .build();
 
     String simpleName = model.rootComponent().getSimpleName().toString();
+    String wrapperSimpleName = "GeneratedCucumber" + simpleName;
     TypeSpec.Builder builder =
-        TypeSpec.interfaceBuilder("GeneratedCucumber" + simpleName)
+        TypeSpec.interfaceBuilder(wrapperSimpleName)
             .addModifiers(Modifier.PUBLIC)
             .addAnnotation(componentAnnotation)
             .addSuperinterface(cucumberDaggerComponentName)
@@ -321,6 +333,28 @@ final class CucumberDaggerGenerator {
 
     for (AnnotationMirror scope : model.scopeAnnotations()) {
       builder.addAnnotation(AnnotationSpec.get(scope));
+    }
+
+    // If the user declared @Component.Builder, generate a matching builder on the wrapper that
+    // extends the user's builder with a covariant build() return type. This ensures Dagger
+    // generates builder() on DaggerGeneratedCucumber{Name} instead of only create().
+    if (model.componentBuilder() != null) {
+      ClassName wrapperName = ClassName.get(model.rootPackage(), wrapperSimpleName);
+      ClassName userBuilderName = ClassName.get(model.rootComponent()).nestedClass("Builder");
+      TypeSpec wrapperBuilderInterface =
+          TypeSpec.interfaceBuilder("Builder")
+              .addAnnotation(
+                  AnnotationSpec.builder(ClassName.get("dagger", "Component", "Builder")).build())
+              .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+              .addSuperinterface(userBuilderName)
+              .addMethod(
+                  MethodSpec.methodBuilder("build")
+                      .addAnnotation(Override.class)
+                      .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+                      .returns(wrapperName)
+                      .build())
+              .build();
+      builder.addType(wrapperBuilderInterface);
     }
 
     writeJavaFile(model.rootPackage(), builder.build(), model.rootComponent());

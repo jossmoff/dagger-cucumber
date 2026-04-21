@@ -17,7 +17,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 
 /**
- * Pipeline step 3 - assembles the final {@link ProcessingModel} from the data collected by earlier
+ * Pipeline step 4 - assembles the final {@link ProcessingModel} from the data collected by earlier
  * steps.
  *
  * <p>Responsibilities:
@@ -121,6 +121,7 @@ final class BuildProcessingModelStep
             stepDefMethods,
             userModules,
             scopeAnnotations,
-            rootProvisionMethods));
+            rootProvisionMethods,
+            input.componentBuilder()));
   }
 }

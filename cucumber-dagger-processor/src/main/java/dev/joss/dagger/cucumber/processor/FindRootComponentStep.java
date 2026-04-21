@@ -46,6 +46,6 @@ final class FindRootComponentStep
 
     String pkg =
         ctx.processingEnv.getElementUtils().getPackageOf(root).getQualifiedName().toString();
-    return StepResult.succeeded(new FoundRootComponent(root, pkg));
+    return StepResult.succeeded(new FoundRootComponent(root, pkg, null));
   }
 }

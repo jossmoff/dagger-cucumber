@@ -33,7 +33,8 @@ class CollectStepDefsStepTest {
               TypeElement root =
                   ctx.processingEnv.getElementUtils().getTypeElement("test.AppComponent");
               captured.set(
-                  new CollectStepDefsStep().execute(ctx, new FoundRootComponent(root, "test")));
+                  new CollectStepDefsStep()
+                      .execute(ctx, new FoundRootComponent(root, "test", null)));
             },
             APP_COMPONENT,
             JavaFileObjects.forSourceLines(
@@ -60,7 +61,8 @@ class CollectStepDefsStepTest {
               TypeElement root =
                   ctx.processingEnv.getElementUtils().getTypeElement("test.AppComponent");
               captured.set(
-                  new CollectStepDefsStep().execute(ctx, new FoundRootComponent(root, "test")));
+                  new CollectStepDefsStep()
+                      .execute(ctx, new FoundRootComponent(root, "test", null)));
             },
             APP_COMPONENT,
             JavaFileObjects.forSourceLines(
@@ -86,7 +88,8 @@ class CollectStepDefsStepTest {
               TypeElement root =
                   ctx.processingEnv.getElementUtils().getTypeElement("test.AppComponent");
               captured.set(
-                  new CollectStepDefsStep().execute(ctx, new FoundRootComponent(root, "test")));
+                  new CollectStepDefsStep()
+                      .execute(ctx, new FoundRootComponent(root, "test", null)));
             },
             APP_COMPONENT);
 
