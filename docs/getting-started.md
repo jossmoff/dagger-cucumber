@@ -88,7 +88,7 @@ public abstract class AppModule {
 
 ## 4. Add scenario-scoped bindings
 
-Bindings created fresh for each scenario go in a separate module annotated with `@ScenarioScope`.
+Bindings created fresh for each scenario go in a separate module, with `@ScenarioScope` applied to the `@Provides` methods in that module.
 
 ```java
 package com.example.tests;
