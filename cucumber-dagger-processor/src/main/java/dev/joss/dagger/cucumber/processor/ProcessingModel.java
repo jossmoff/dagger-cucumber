@@ -27,6 +27,12 @@ import javax.lang.model.type.TypeMirror;
  * @param rootProvisionMethods Provision methods declared on the root component interface: return
  *     {@link TypeName} → method name. Used to generate the {@code resolveRoot} dispatch in {@code
  *     GeneratedComponentResolver}. Backed by a {@link LinkedHashMap}.
+ * @param componentBuilder the inner {@code @Component.Builder} interface declared on {@link
+ *     #rootComponent()}, or {@code null} if the root component declares no such inner type. When
+ *     non-null, the generated wrapper component includes a matching {@code @Component.Builder} so
+ *     that Dagger generates {@code builder()} on the {@code DaggerXxx} class. At runtime, {@link
+ *     dev.joss.dagger.cucumber.internal.DaggerBackend} falls back to {@code builder().build()} when
+ *     {@code create()} is absent.
  */
 record ProcessingModel(
     TypeElement rootComponent,
@@ -36,4 +42,5 @@ record ProcessingModel(
     Map<TypeName, String> stepDefMethods,
     List<TypeMirror> userModules,
     List<AnnotationMirror> scopeAnnotations,
-    Map<TypeName, String> rootProvisionMethods) {}
+    Map<TypeName, String> rootProvisionMethods,
+    TypeElement componentBuilder) {}

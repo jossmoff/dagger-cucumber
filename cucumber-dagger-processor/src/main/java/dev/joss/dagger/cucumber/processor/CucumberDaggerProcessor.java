@@ -38,10 +38,12 @@ import javax.lang.model.element.TypeElement;
  *       pointing to the Dagger-generated factory for the wrapper component.
  * </ul>
  *
- * <p>All discovery and validation logic lives in the three discrete pipeline steps:
+ * <p>All discovery and validation logic lives in four discrete pipeline steps:
  *
  * <ol>
  *   <li>{@link FindRootComponentStep} - locates and validates the root component interface.
+ *   <li>{@link DetectComponentBuilderStep} - optionally detects an inner {@code @Component.Builder}
+ *       and branches generation accordingly.
  *   <li>{@link CollectStepDefsStep} - finds step-definition classes.
  *   <li>{@link BuildProcessingModelStep} - assembles the {@link ProcessingModel} for generation.
  * </ol>
@@ -85,6 +87,7 @@ public final class CucumberDaggerProcessor extends AbstractProcessor {
     StepResult<ProcessingModel> result =
         Pipeline.<ProcessingContext, Set<? extends Element>>of(ctx, annotated)
             .pipe(new FindRootComponentStep())
+            .pipe(new DetectComponentBuilderStep())
             .pipe(new CollectStepDefsStep())
             .pipe(new BuildProcessingModelStep())
             .result();

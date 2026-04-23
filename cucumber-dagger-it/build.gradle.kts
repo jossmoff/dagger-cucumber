@@ -8,6 +8,7 @@ plugins {
 
 dependencies {
     testImplementation(project(":cucumber-dagger"))
+    testImplementation(libs.jakarta.annotation.api)
     testAnnotationProcessor(project(":cucumber-dagger-processor"))
     testAnnotationProcessor(libs.dagger.compiler)
 

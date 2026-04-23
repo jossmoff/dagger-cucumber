@@ -16,6 +16,8 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
@@ -201,6 +203,10 @@ final class CucumberDaggerGenerator {
    *   <li>{@code resolveRoot} - casts to the user's root component interface and dispatches via
    *       {@code if (type == X.class)} chains for root provision methods.
    * </ul>
+   *
+   * <p>Root component instantiation is handled at runtime by {@link
+   * dev.joss.dagger.cucumber.internal.DaggerBackend}; the service file identifies the generated
+   * factory class, and the runtime determines which instantiation path to use.
    */
   private void generateComponentResolver(ProcessingModel model) {
     ClassName componentResolverName = ClassName.get(API_PKG, "ComponentResolver");
@@ -280,6 +286,13 @@ final class CucumberDaggerGenerator {
    * combines the user's modules with the generated {@code CucumberDaggerModule}. The wrapper also
    * extends the user's root component interface so that Dagger generates implementations for its
    * provision methods, enabling type-safe dispatch in {@code GeneratedComponentResolver}.
+   *
+   * <p>When the user's root component declares a {@code @Component.Builder} inner interface, the
+   * generated wrapper includes a matching {@code @Component.Builder} that extends the user's
+   * builder with a covariant {@code build()} return type. This causes Dagger to generate a {@code
+   * builder()} factory on the {@code DaggerXxx} class; at runtime {@link
+   * dev.joss.dagger.cucumber.internal.DaggerBackend} falls back to {@code builder().build()} when
+   * no {@code create()} is present.
    */
   private void generateCucumberRootComponent(ProcessingModel model) {
     ClassName cucumberDaggerComponentName = ClassName.get(API_PKG, "CucumberDaggerComponent");
@@ -312,8 +325,9 @@ final class CucumberDaggerGenerator {
             .build();
 
     String simpleName = model.rootComponent().getSimpleName().toString();
+    String wrapperSimpleName = "GeneratedCucumber" + simpleName;
     TypeSpec.Builder builder =
-        TypeSpec.interfaceBuilder("GeneratedCucumber" + simpleName)
+        TypeSpec.interfaceBuilder(wrapperSimpleName)
             .addModifiers(Modifier.PUBLIC)
             .addAnnotation(componentAnnotation)
             .addSuperinterface(cucumberDaggerComponentName)
@@ -321,6 +335,56 @@ final class CucumberDaggerGenerator {
 
     for (AnnotationMirror scope : model.scopeAnnotations()) {
       builder.addAnnotation(AnnotationSpec.get(scope));
+    }
+
+    // If the user declared @Component.Builder, generate a matching builder on the wrapper that
+    // extends the user's builder with a covariant terminal-method return type. This ensures Dagger
+    // generates builder() on DaggerGeneratedCucumber{Name} instead of only create().
+    if (model.componentBuilder() != null) {
+      ClassName wrapperName = ClassName.get(model.rootPackage(), wrapperSimpleName);
+      ClassName userBuilderName = ClassName.get(model.componentBuilder());
+      TypeMirror rootComponentType = model.rootComponent().asType();
+      // Detect the terminal method: the zero-arg method on the builder returning the root
+      // component.
+      String terminalMethodName =
+          model.componentBuilder().getEnclosedElements().stream()
+              .filter(e -> e.getKind() == ElementKind.METHOD)
+              .map(e -> (ExecutableElement) e)
+              .filter(
+                  e ->
+                      e.getParameters().isEmpty()
+                          && processingEnv
+                              .getTypeUtils()
+                              .isAssignable(e.getReturnType(), rootComponentType))
+              .map(e -> e.getSimpleName().toString())
+              .findFirst()
+              .orElse(null);
+      if (terminalMethodName == null) {
+        processingEnv
+            .getMessager()
+            .printMessage(
+                Diagnostic.Kind.ERROR,
+                "@Component.Builder has no zero-arg terminal method returning the root component."
+                    + " Add a method returning "
+                    + model.rootComponent().getSimpleName()
+                    + " with no parameters.",
+                model.componentBuilder());
+        return;
+      }
+      TypeSpec wrapperBuilderInterface =
+          TypeSpec.interfaceBuilder("Builder")
+              .addAnnotation(
+                  AnnotationSpec.builder(ClassName.get("dagger", "Component", "Builder")).build())
+              .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+              .addSuperinterface(userBuilderName)
+              .addMethod(
+                  MethodSpec.methodBuilder(terminalMethodName)
+                      .addAnnotation(Override.class)
+                      .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+                      .returns(wrapperName)
+                      .build())
+              .build();
+      builder.addType(wrapperBuilderInterface);
     }
 
     writeJavaFile(model.rootPackage(), builder.build(), model.rootComponent());

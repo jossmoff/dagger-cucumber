@@ -1,48 +1,25 @@
-# Providing static values and accessing the Scenario object
+# Providing static values and the Scenario object
 
-## The lifecycle constraint
+## Static configuration via @BindsInstance
 
-Cucumber calls `DaggerBackend.buildWorld()` before it processes any `@Before` hooks. Because `buildWorld()` accepts no parameters (it is defined that way by the Cucumber `Backend` SPI), the `io.cucumber.java.Scenario` object is not available at the moment the scenario-scoped Dagger subcomponent is created. You cannot inject `Scenario` directly into a constructor or a `@Provides` method.
-
-## The ScenarioHolder pattern
-
-The solution is a mutable holder object that is created once at singleton scope and populated by a `@Before` hook after Cucumber has made the `Scenario` available.
-
-### Step 1: create the holder
+Use `@Component.Builder` with `@Nullable @BindsInstance` to inject values known before the test run — base URLs, environment names, credentials read from system properties. Annotating a parameter `@Nullable` makes the setter optional so `builder().build()` succeeds without calling it explicitly (the runtime calls the builder with no setters).
 
 ```java
-package com.example.tests;
-
-import io.cucumber.java.Scenario;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-
+@CucumberDaggerConfiguration
 @Singleton
-public final class ScenarioHolder {
+@Component(modules = {PriceListModule.class, ScenarioModule.class})
+public interface IntegrationTestConfig {
 
-    private Scenario scenario;
-
-    @Inject
-    public ScenarioHolder() {}
-
-    public void set(Scenario scenario) {
-        this.scenario = scenario;
-    }
-
-    public Scenario get() {
-        if (scenario == null) {
-            throw new IllegalStateException(
-                    "ScenarioHolder has not been populated. "
-                    + "Ensure your @Before hook calls ScenarioHolder.set().");
-        }
-        return scenario;
+    @Component.Builder
+    interface Builder {
+        @BindsInstance Builder baseUrl(@Nullable String baseUrl);
+        @BindsInstance Builder environment(@Nullable String environment);
+        IntegrationTestConfig build();
     }
 }
 ```
 
-`ScenarioHolder` has an `@Inject` constructor, so it is discovered as a step definition class and its provision method is generated on the scenario subcomponent. It is bound at `@Singleton` scope via a `@Provides` method in a root module, so all injection sites receive the same instance.
-
-Alternatively, bind it explicitly in a root module:
+Inject the bound value anywhere in the graph:
 
 ```java
 @Module
@@ -50,128 +27,67 @@ public abstract class AppModule {
 
     @Provides
     @Singleton
-    static ScenarioHolder provideScenarioHolder() {
-        return new ScenarioHolder();
+    static ApiClient provideApiClient(@Nullable String baseUrl, @Nullable String environment) {
+        String url = baseUrl != null ? baseUrl : System.getProperty("base.url", "http://localhost:8080");
+        return new ApiClient(url, environment);
     }
 }
 ```
 
-### Step 2: populate the holder in a @Before hook
+> **No-arg builder contract:** every `@BindsInstance` parameter must be `@Nullable`. The runtime calls `builder().build()` without setting any values — non-nullable parameters cause Dagger to throw at runtime.
+
+## The Scenario object
+
+`buildWorld()` is called before `@Before` hooks, so `io.cucumber.java.Scenario` is not available when the subcomponent is created. Use a mutable holder populated by a `@Before` hook.
+
+### Step 1 — create the holder
 
 ```java
-package com.example.tests;
-
-import io.cucumber.java.Before;
-import io.cucumber.java.Scenario;
-import jakarta.inject.Inject;
-
-public final class ScenarioHooks {
-
-    private final ScenarioHolder scenarioHolder;
-
-    @Inject
-    public ScenarioHooks(ScenarioHolder scenarioHolder) {
-        this.scenarioHolder = scenarioHolder;
-    }
-
-    @Before
-    public void captureScenario(Scenario scenario) {
-        scenarioHolder.set(scenario);
-    }
-}
-```
-
-Cucumber calls `@Before` hooks after `buildWorld()` but before any step methods, so `scenarioHolder` is already populated by the time your step methods run.
-
-### Step 3: inject ScenarioHolder where you need the Scenario object
-
-```java
-package com.example.tests;
-
-import io.cucumber.java.en.Then;
-import jakarta.inject.Inject;
-
-public final class AuditSteps {
-
-    private final ScenarioHolder scenarioHolder;
-
-    @Inject
-    public AuditSteps(ScenarioHolder scenarioHolder) {
-        this.scenarioHolder = scenarioHolder;
-    }
-
-    @Then("the scenario name is logged")
-    public void theScenarioNameIsLogged() {
-        String name = scenarioHolder.get().getName();
-        // ... use name
-    }
-}
-```
-
-## Thread safety note
-
-The `ScenarioHolder` shown above stores the `Scenario` reference in a plain instance field. This is safe for sequential scenario execution but is **not thread-safe for parallel execution**. If you run scenarios in parallel across threads, replace the field with a `ThreadLocal<Scenario>` or an `AtomicReference<Scenario>`:
-
-```java
-// Thread-safe variant using ThreadLocal
 @Singleton
 public final class ScenarioHolder {
 
-    private final ThreadLocal<Scenario> holder = new ThreadLocal<>();
+    private Scenario scenario;
 
-    @Inject
-    public ScenarioHolder() {}
+    @Inject public ScenarioHolder() {}
 
-    public void set(Scenario scenario) {
-        holder.set(scenario);
-    }
+    public void set(Scenario scenario) { this.scenario = scenario; }
 
     public Scenario get() {
-        Scenario s = holder.get();
-        if (s == null) {
-            throw new IllegalStateException("ScenarioHolder has not been populated.");
-        }
-        return s;
-    }
-
-    public void clear() {
-        holder.remove();
+        if (scenario == null) throw new IllegalStateException("ScenarioHolder not populated");
+        return scenario;
     }
 }
 ```
 
-Call `scenarioHolder.clear()` from an `@After` hook to prevent `ThreadLocal` leaks when using a thread pool.
-
-## Static configuration values
-
-Values that are known before the test run - such as the target environment name, a base URL, or feature flags - do not need the `ScenarioHolder` pattern. Provide them via a `@Provides @Singleton` method in a root module.
+### Step 2 — populate in a @Before hook
 
 ```java
-// A typed wrapper avoids the ambiguity of injecting bare String values.
-public record BaseUrl(String value) {}
-```
+public final class ScenarioHooks {
 
-```java
-@Module
-public abstract class EnvironmentModule {
+    private final ScenarioHolder holder;
 
-    @Provides
-    @Singleton
-    static BaseUrl provideBaseUrl() {
-        String env = System.getenv("TEST_ENV");
-        return switch (env != null ? env : "local") {
-            case "staging" -> new BaseUrl("https://staging.example.com");
-            case "prod"    -> new BaseUrl("https://example.com");
-            default        -> new BaseUrl("http://localhost:8080");
-        };
-    }
+    @Inject public ScenarioHooks(ScenarioHolder holder) { this.holder = holder; }
+
+    @Before
+    public void capture(Scenario scenario) { holder.set(scenario); }
 }
 ```
 
-Step definitions can then declare `BaseUrl` as a constructor parameter and receive the configured value for the entire test run. Using a typed wrapper rather than a bare `String` avoids ambiguity when multiple `String` values exist in the graph.
+### Thread safety
 
-## Note on future @BindsInstance support
+For parallel execution replace the field with a `ThreadLocal`:
 
-The current implementation calls `DaggerGeneratedCucumber{Name}.create()` to construct the root component. Dagger only generates a no-argument `create()` method when all modules have no-argument constructors or static `@Provides` methods and no `@BindsInstance` parameters are required on the component builder.
+```java
+private final ThreadLocal<Scenario> holder = new ThreadLocal<>();
 
-If you want to pass caller-supplied values (for example, a `Scenario` object) into the scenario component at construction time, the `ComponentResolver.createScoped()` method would need to accept additional parameters and the generated subcomponent builder would need `@BindsInstance` methods. This is not yet implemented. You can track progress and contribute to the discussion on the [GitHub issues page](https://github.com/jossmoff/dagger-cucumber/issues).
+public void set(Scenario s) { holder.set(s); }
+
+public Scenario get() {
+    Scenario scenario = holder.get();
+    if (scenario == null) throw new IllegalStateException("ScenarioHolder not populated");
+    return scenario;
+}
+
+@After
+public void clear() { holder.remove(); }
+```

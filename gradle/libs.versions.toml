@@ -6,6 +6,7 @@ compile-testing = "0.23.0"
 cucumber = "7.34.3"
 dagger = "2.59.2"
 git-version = "5.0.0"
+jakarta-annotation = "2.1.1"
 jakarta-inject = "2.0.1"
 javapoet = "0.14.0"
 junit-bom = "6.0.3"
@@ -24,6 +25,7 @@ cucumber-java = { module = "io.cucumber:cucumber-java", version.ref = "cucumber"
 cucumber-junit-platform-engine = { module = "io.cucumber:cucumber-junit-platform-engine", version.ref = "cucumber" }
 dagger = { module = "com.google.dagger:dagger", version.ref = "dagger" }
 dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = "dagger" }
+jakarta-annotation-api = { module = "jakarta.annotation:jakarta.annotation-api", version.ref = "jakarta-annotation" }
 jakarta-inject-api = { module = "jakarta.inject:jakarta.inject-api", version.ref = "jakarta-inject" }
 javapoet = { module = "com.palantir.javapoet:javapoet", version.ref = "javapoet" }
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit-bom" }

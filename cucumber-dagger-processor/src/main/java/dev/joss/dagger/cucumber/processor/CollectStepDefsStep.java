@@ -11,7 +11,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 
 /**
- * Pipeline step 2 - collects step-definition classes.
+ * Pipeline step 3 - collects step-definition classes.
  *
  * <p>A step-definition class is any class in the glue package that has an {@code @Inject}
  * constructor. This step performs no validation: having zero step-definition classes is valid.
@@ -37,7 +37,8 @@ final class CollectStepDefsStep
                         LinkedHashMap::new));
 
     return StepResult.succeeded(
-        new CollectedStepDefs(input.rootComponent(), input.rootPackage(), stepDefMethods));
+        new CollectedStepDefs(
+            input.rootComponent(), input.rootPackage(), stepDefMethods, input.componentBuilder()));
   }
 
   private static boolean isConstructor(Element element) {
