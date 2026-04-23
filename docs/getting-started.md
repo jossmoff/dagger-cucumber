@@ -17,6 +17,8 @@ dependencies {
     testAnnotationProcessor("dev.joss:cucumber-dagger-processor")
     testAnnotationProcessor("com.google.dagger:dagger-compiler:<dagger-version>")
 
+    testCompileOnly("jakarta.annotation:jakarta.annotation-api:<jakarta-annotation-version>")
+
     testImplementation(platform("org.junit:junit-bom:<junit-version>"))
     testImplementation("io.cucumber:cucumber-java:<cucumber-version>")
     testImplementation("io.cucumber:cucumber-junit-platform-engine:<cucumber-version>")

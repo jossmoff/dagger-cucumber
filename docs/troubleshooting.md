@@ -9,7 +9,7 @@
 | `Only one @CucumberDaggerConfiguration is allowed` | Two interfaces annotated |
 | `@CucumberDaggerConfiguration can only be applied to interfaces` | Annotation on a class |
 | `Qualified @ScenarioScope provider methods are not currently supported` | `@ScenarioScope` + `@Named` on same method |
-| `has neither a static create() nor a static builder() method` | Dagger-generated class not on classpath |
+| `has neither a static create() nor a static builder() method` | `dagger-compiler` not configured so Dagger did not generate a component implementation |
 | `Multiple CucumberDaggerComponent factories found` | Two subprojects merged onto one classpath |
 
 ---
@@ -112,7 +112,7 @@ java.lang.IllegalStateException: DaggerGeneratedCucumberIntegrationTestConfig
  has neither a static create() nor a static builder() method.
 ```
 
-**Cause.** The runtime could not reflectively instantiate the Dagger-generated component. This usually means `dagger-compiler` is not configured, so the `DaggerGeneratedCucumber*` class was never generated.
+**Cause.** The Dagger-generated component class was found on the classpath (otherwise you would see `Could not load component class`), but it has no `static create()` or `static builder()` method. This happens when `dagger-compiler` is not configured as an annotation processor, so Dagger never generated a `DaggerGeneratedCucumber*` implementation — only the interface compiled by `javac` is present.
 
 **Fix.**
 1. Confirm both annotation processors are declared:
