@@ -13,7 +13,7 @@ junit-bom = "6.0.3"
 junit-platform = "6.0.3"
 mockito = "5.23.0"
 nexus-publish = "2.0.0"
-spotless = "8.4.0"
+spotless = "8.7.0"
 
 [libraries]
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
