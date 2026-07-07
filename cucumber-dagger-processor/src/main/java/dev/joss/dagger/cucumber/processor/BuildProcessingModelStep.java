@@ -84,8 +84,7 @@ final class BuildProcessingModelStep
           if (ctx.knownTypes.jakartaNamed != null
               && ctx.processingEnv
                   .getTypeUtils()
-                  .isSameType(
-                      qualifier.getAnnotationType(), ctx.knownTypes.jakartaNamed.asType())
+                  .isSameType(qualifier.getAnnotationType(), ctx.knownTypes.jakartaNamed.asType())
               && returnTypeElement != null) {
             String namedValue = getNamedValue(qualifier);
             if (namedValue != null) {
@@ -164,4 +163,3 @@ final class BuildProcessingModelStep
     return null;
   }
 }
-
