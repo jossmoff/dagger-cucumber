@@ -1,4 +1,4 @@
-package dev.joss.dagger.cucumber.it;
+package dev.joss.dagger.cucumber.examples;
 
 import dagger.BindsInstance;
 import dagger.Component;
@@ -8,7 +8,7 @@ import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
 /**
- * Root Dagger component for the integration-test suite.
+ * Root Dagger component for the store example.
  *
  * <p>The {@code @Component.Builder} demonstrates the {@code @BindsInstance} pattern. The {@code
  * storeName} setter binds the raw value under the {@code "rawStoreName"} qualifier. {@link
@@ -21,7 +21,7 @@ import jakarta.inject.Singleton;
 @CucumberDaggerConfiguration
 @Singleton
 @Component(modules = {PriceListModule.class, ScenarioModule.class})
-public interface IntegrationTestConfig {
+public interface StoreConfig {
 
   @Component.Builder
   interface Builder {
@@ -33,6 +33,6 @@ public interface IntegrationTestConfig {
     @BindsInstance
     Builder storeName(@Named("rawStoreName") @Nullable String storeName);
 
-    IntegrationTestConfig build();
+    StoreConfig build();
   }
 }
