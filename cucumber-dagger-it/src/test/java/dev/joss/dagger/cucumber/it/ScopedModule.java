@@ -12,7 +12,7 @@ import jakarta.inject.Named;
  *   <li>{@code @Provides @ScenarioScope} — unqualified scoped binding ({@link ScopedCounter},
  *       {@link ScopedService}).
  *   <li>{@code @Provides @ScenarioScope @Named} — named (qualified) scoped binding ({@link
- *       ScopedCounter} with {@code "primary"} qualifier).
+ *       ScopedCounter} with {@code "primary"} and {@code "secondary"} qualifiers).
  * </ul>
  */
 @Module
@@ -34,6 +34,13 @@ public final class ScopedModule {
   @ScenarioScope
   @Named("primary")
   static ScopedCounter providePrimaryScopedCounter() {
+    return new ScopedCounter();
+  }
+
+  @Provides
+  @ScenarioScope
+  @Named("secondary")
+  static ScopedCounter provideSecondaryScopedCounter() {
     return new ScopedCounter();
   }
 }

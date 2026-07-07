@@ -9,18 +9,23 @@ import jakarta.inject.Named;
 /**
  * Steps that verify {@code @Named}-qualified {@code @ScenarioScope} bindings.
  *
- * <p>Injects a {@code @Named("primary")} {@link ScopedCounter} alongside the regular (unqualified)
- * {@link ScopedCounter} to confirm they are independent instances scoped to the same scenario.
+ * <p>Injects a {@code @Named("primary")} and {@code @Named("secondary")} {@link ScopedCounter}
+ * alongside the regular (unqualified) {@link ScopedCounter} to confirm they are all independent
+ * instances scoped to the same scenario.
  */
 public final class NamedScopeSteps {
 
   private final ScopedCounter primaryCounter;
+  private final ScopedCounter secondaryCounter;
   private final ScopedCounter regularCounter;
 
   @Inject
   public NamedScopeSteps(
-      @Named("primary") ScopedCounter primaryCounter, ScopedCounter regularCounter) {
+      @Named("primary") ScopedCounter primaryCounter,
+      @Named("secondary") ScopedCounter secondaryCounter,
+      ScopedCounter regularCounter) {
     this.primaryCounter = primaryCounter;
+    this.secondaryCounter = secondaryCounter;
     this.regularCounter = regularCounter;
   }
 
@@ -34,5 +39,13 @@ public final class NamedScopeSteps {
     primaryCounter.increment();
     assertThat(primaryCounter.get()).isEqualTo(1);
     assertThat(regularCounter.get()).isEqualTo(0);
+  }
+
+  @Then("two named counters of the same type are independent instances")
+  public void twoNamedCountersOfTheSameTypeAreIndependentInstances() {
+    primaryCounter.increment();
+    primaryCounter.increment();
+    assertThat(primaryCounter.get()).isEqualTo(2);
+    assertThat(secondaryCounter.get()).isEqualTo(0);
   }
 }
