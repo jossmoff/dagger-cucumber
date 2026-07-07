@@ -1,4 +1,4 @@
-package dev.joss.dagger.cucumber.it;
+package dev.joss.dagger.cucumber.examples;
 
 /** Formats a checkout receipt. Bound via {@code @Binds} in {@link PriceListModule}. */
 public interface ReceiptFormatter {

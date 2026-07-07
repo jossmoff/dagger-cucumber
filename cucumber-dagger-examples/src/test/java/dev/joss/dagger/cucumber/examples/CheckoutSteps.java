@@ -1,4 +1,4 @@
-package dev.joss.dagger.cucumber.it;
+package dev.joss.dagger.cucumber.examples;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

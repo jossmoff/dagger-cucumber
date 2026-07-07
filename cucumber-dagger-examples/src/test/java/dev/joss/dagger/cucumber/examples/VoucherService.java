@@ -1,4 +1,4 @@
-package dev.joss.dagger.cucumber.it;
+package dev.joss.dagger.cucumber.examples;
 
 /**
  * Applies a voucher to a basket total. No binding is provided in the test suite, so injection

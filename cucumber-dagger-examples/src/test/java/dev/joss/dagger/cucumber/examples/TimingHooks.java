@@ -1,4 +1,4 @@
-package dev.joss.dagger.cucumber.it;
+package dev.joss.dagger.cucumber.examples;
 
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
@@ -10,8 +10,8 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Cucumber hooks that emit per-scenario and cumulative wall-clock timing to stdout.
  *
- * <p>Compare the cumulative total from {@code ./gradlew :cucumber-dagger-it:test --rerun-tasks}
- * against other frameworks to gauge relative overhead.
+ * <p>Compare the cumulative total from {@code ./gradlew :cucumber-dagger-examples:test
+ * --rerun-tasks} against other frameworks to gauge relative overhead.
  */
 public final class TimingHooks {
 
@@ -34,7 +34,7 @@ public final class TimingHooks {
     long cumulativeNanos = totalNanos.addAndGet(elapsedNanos);
     int count = scenarioCount.incrementAndGet();
     System.out.printf(
-        "[dagger-it] '%s': %.2f ms  (cumulative after %d scenarios: %.2f ms)%n",
+        "[dagger-examples] '%s': %.2f ms  (cumulative after %d scenarios: %.2f ms)%n",
         scenario.getName(), elapsedNanos / 1_000_000.0, count, cumulativeNanos / 1_000_000.0);
   }
 }
