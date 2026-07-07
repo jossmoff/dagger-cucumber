@@ -8,13 +8,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic;
 
 /**
  * Pipeline step 4 - assembles the final {@link ProcessingModel} from the data collected by earlier
@@ -25,8 +25,14 @@ import javax.tools.Diagnostic;
  * <ul>
  *   <li>Scans each module listed in the root {@code @Component} for
  *       {@code @Provides @ScenarioScope} methods and builds scoped provision methods.
- *   <li>Rejects qualified ({@code @Named} etc.) {@code @ScenarioScope} provider methods with a
- *       compile error.
+ *   <li>For {@code @Named}-qualified {@code @ScenarioScope} methods: generates a named provision
+ *       method (e.g., {@code primaryBasket()} for {@code @Named("primary") Basket}) that is emitted
+ *       on {@code GeneratedScopedComponent} with the {@code @Named} annotation. The module is still
+ *       included in {@code GeneratedScopedModule} so Dagger resolves the qualified binding for
+ *       step-definition dependencies.
+ *   <li>For other (non-{@code @Named}) qualified {@code @ScenarioScope} methods: includes the
+ *       module in {@code GeneratedScopedModule} so that transitive dependencies are resolved by
+ *       Dagger, but does not generate a dedicated provision method.
  *   <li>Collects zero-argument provision methods declared on the root component interface for use
  *       in the generated {@code resolveRoot} dispatch.
  *   <li>Copies scope annotations (e.g. {@code @Singleton}) from the root component to the model.
@@ -38,10 +44,9 @@ final class BuildProcessingModelStep
   @Override
   public StepResult<ProcessingModel> execute(ProcessingContext ctx, CollectedStepDefs input) {
 
-    boolean hasErrors = false;
-
     // Scan @Component modules for @Provides @ScenarioScope methods
     Map<TypeName, String> scopedProvisionMethods = new LinkedHashMap<>();
+    List<NamedScopedProvision> namedScopedProvisions = new ArrayList<>();
     List<TypeElement> userScopedModules = new ArrayList<>();
     List<TypeMirror> userModules =
         ctx.annotationUtils.getClassArrayValue(
@@ -59,23 +64,43 @@ final class BuildProcessingModelStep
         if (!ctx.annotationUtils.hasAnnotation(method, ctx.knownTypes.daggerProvides)) continue;
         if (!ctx.annotationUtils.hasAnnotation(method, ctx.knownTypes.scenarioScope)) continue;
 
-        if (!ctx.annotationUtils
-            .findMetaAnnotated(method.getAnnotationMirrors(), ctx.knownTypes.jakartaQualifier)
-            .isEmpty()) {
-          ctx.messager()
-              .printMessage(
-                  Diagnostic.Kind.ERROR,
-                  "Qualified @ScenarioScope provider methods are not currently supported: "
-                      + method.getSimpleName(),
-                  method);
-          hasErrors = true;
+        TypeName returnTypeName = TypeName.get(method.getReturnType());
+        TypeElement returnTypeElement =
+            (TypeElement) ctx.processingEnv.getTypeUtils().asElement(method.getReturnType());
+
+        List<AnnotationMirror> qualifiers =
+            ctx.annotationUtils.findMetaAnnotated(
+                method.getAnnotationMirrors(), ctx.knownTypes.jakartaQualifier);
+
+        if (!qualifiers.isEmpty()) {
+          // Always mark the module as a user-scoped module so it is included in
+          // GeneratedScopedModule; this ensures Dagger can resolve qualified bindings as
+          // transitive dependencies of step-definition classes.
+          isUserScopedModule = true;
+
+          // For @Named qualifiers, generate a named provision method so that Dagger exposes the
+          // binding through a dedicated accessor on GeneratedScopedComponent.
+          AnnotationMirror qualifier = qualifiers.get(0);
+          if (ctx.knownTypes.jakartaNamed != null
+              && ctx.processingEnv
+                  .getTypeUtils()
+                  .isSameType(
+                      qualifier.getAnnotationType(), ctx.knownTypes.jakartaNamed.asType())
+              && returnTypeElement != null) {
+            String namedValue = getNamedValue(qualifier);
+            if (namedValue != null) {
+              String methodName =
+                  NamingStrategy.decapitalize(namedValue)
+                      + returnTypeElement.getSimpleName().toString();
+              namedScopedProvisions.add(
+                  new NamedScopedProvision(returnTypeName, methodName, namedValue));
+            }
+          }
+          // Non-@Named qualifiers: module is included above; no provision method is generated.
           continue;
         }
 
         isUserScopedModule = true;
-        TypeName returnTypeName = TypeName.get(method.getReturnType());
-        TypeElement returnTypeElement =
-            (TypeElement) ctx.processingEnv.getTypeUtils().asElement(method.getReturnType());
         String methodName =
             returnTypeElement != null
                 ? NamingStrategy.provisionMethodName(returnTypeElement)
@@ -84,8 +109,6 @@ final class BuildProcessingModelStep
       }
       if (isUserScopedModule) userScopedModules.add(moduleElement);
     }
-
-    if (hasErrors) return StepResult.failed();
 
     // Collect abstract zero-argument provision methods on the root component interface for
     // resolveRoot dispatch in GeneratedComponentResolver.
@@ -122,6 +145,23 @@ final class BuildProcessingModelStep
             userModules,
             scopeAnnotations,
             rootProvisionMethods,
-            input.componentBuilder()));
+            input.componentBuilder(),
+            namedScopedProvisions));
+  }
+
+  /**
+   * Extracts the string {@code value()} from a {@code @Named} annotation mirror. Returns {@code
+   * null} if the value attribute is absent or not a string.
+   */
+  private static String getNamedValue(AnnotationMirror namedAnnotation) {
+    for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
+        namedAnnotation.getElementValues().entrySet()) {
+      if (entry.getKey().getSimpleName().contentEquals("value")) {
+        Object val = entry.getValue().getValue();
+        return val instanceof String s ? s : null;
+      }
+    }
+    return null;
   }
 }
+
