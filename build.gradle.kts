@@ -21,22 +21,16 @@ subprojects {
                 languageVersion.set(JavaLanguageVersion.of(21))
             }
         }
-        tasks.withType<JavaCompile>().configureEach {
-            options.compilerArgs.add("-XDaddTypeAnnotationsToSymbol=true")
-        }
     }
 
     plugins.withId("com.palantir.baseline-error-prone") {
-        // Guava 33.6.0 (a transitive dep of dagger-spi) brings in error_prone_annotations:2.47.0
-        // via its parent BOM, which triggers Gradle's virtual platform alignment and upgrades
-        // error_prone_core from 2.41.0 to 2.47.0. error_prone_core:2.47.0 removed
-        // AndroidJdkLibsChecker, which baseline-error-prone:6.79.0 still references. Force
-        // the Error Prone artifacts to the pinned version in annotation processor configurations
-        // to prevent this version mismatch from breaking the build. Bump error-prone in
-        // libs.versions.toml once a compatible baseline-error-prone release ships.
+        // TODO: Remove this once baseline-error-prone is compatible with error_prone_core 2.47+.
+        // Dagger 2.60.1 pulls in Guava 33.6.0-jre, whose metadata aligns Error Prone artifacts to
+        // 2.47.0. baseline-error-prone 6.79.0 still references AndroidJdkLibsChecker, which was
+        // removed there, so keep the pin narrowly scoped to the affected configurations.
         val errorProneVersion = libs.versions.error.prone.get()
         configurations.matching {
-            it.name.endsWith("AnnotationProcessor") || it.name == "errorprone"
+            it.name == "testAnnotationProcessor" || it.name == "errorprone"
         }.configureEach {
             resolutionStrategy.force(
                 "com.google.errorprone:error_prone_core:$errorProneVersion",
