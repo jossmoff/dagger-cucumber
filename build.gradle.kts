@@ -21,6 +21,27 @@ subprojects {
                 languageVersion.set(JavaLanguageVersion.of(21))
             }
         }
+        tasks.withType<JavaCompile>().configureEach {
+            options.compilerArgs.add("-XDaddTypeAnnotationsToSymbol=true")
+        }
+    }
+
+    plugins.withId("com.palantir.baseline-error-prone") {
+        // Guava 33.6.0 (a transitive dep of dagger-spi) brings in error_prone_annotations:2.47.0
+        // via its parent BOM, which triggers Gradle's virtual platform alignment and upgrades
+        // error_prone_core from 2.41.0 to 2.47.0. error_prone_core:2.47.0 removed
+        // AndroidJdkLibsChecker, which baseline-error-prone:6.79.0 still references. Force
+        // the Error Prone artifacts to 2.41.0 in annotation processor configurations to prevent
+        // this version mismatch from breaking the build.
+        configurations.matching {
+            it.name.endsWith("AnnotationProcessor") || it.name == "errorprone"
+        }.configureEach {
+            resolutionStrategy.force(
+                "com.google.errorprone:error_prone_core:2.41.0",
+                "com.google.errorprone:error_prone_annotation:2.41.0",
+                "com.google.errorprone:error_prone_check_api:2.41.0"
+            )
+        }
     }
 
     plugins.withId("maven-publish") {
