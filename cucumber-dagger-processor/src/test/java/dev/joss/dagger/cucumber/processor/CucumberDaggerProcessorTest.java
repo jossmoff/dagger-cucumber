@@ -288,7 +288,7 @@ class CucumberDaggerProcessorTest {
   }
 
   @Test
-  void qualifiedScenarioScopeProviderMethodEmitsCompileError() {
+  void namedQualifiedScenarioScopeProviderMethodSucceedsAndGeneratesNamedProvisionOnSubcomponent() {
     Compilation compilation =
         compile(
             JavaFileObjects.forSourceLines(
@@ -316,9 +316,14 @@ class CucumberDaggerProcessorTest {
                 "  }",
                 "}"));
 
-    assertThat(compilation).failed();
+    assertThat(compilation).succeeded();
     assertThat(compilation)
-        .hadErrorContaining(
-            "Qualified @ScenarioScope provider methods are not currently supported");
+        .generatedSourceFile("test.GeneratedScopedComponent")
+        .contentsAsUtf8String()
+        .contains("fooSomeService");
+    assertThat(compilation)
+        .generatedSourceFile("test.GeneratedScopedComponent")
+        .contentsAsUtf8String()
+        .contains("@Named(\"foo\")");
   }
 }
