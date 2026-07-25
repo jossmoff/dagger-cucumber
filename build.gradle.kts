@@ -31,15 +31,17 @@ subprojects {
         // via its parent BOM, which triggers Gradle's virtual platform alignment and upgrades
         // error_prone_core from 2.41.0 to 2.47.0. error_prone_core:2.47.0 removed
         // AndroidJdkLibsChecker, which baseline-error-prone:6.79.0 still references. Force
-        // the Error Prone artifacts to 2.41.0 in annotation processor configurations to prevent
-        // this version mismatch from breaking the build.
+        // the Error Prone artifacts to the pinned version in annotation processor configurations
+        // to prevent this version mismatch from breaking the build. Bump error-prone in
+        // libs.versions.toml once a compatible baseline-error-prone release ships.
+        val errorProneVersion = libs.versions.error.prone.get()
         configurations.matching {
             it.name.endsWith("AnnotationProcessor") || it.name == "errorprone"
         }.configureEach {
             resolutionStrategy.force(
-                "com.google.errorprone:error_prone_core:2.41.0",
-                "com.google.errorprone:error_prone_annotation:2.41.0",
-                "com.google.errorprone:error_prone_check_api:2.41.0"
+                "com.google.errorprone:error_prone_core:$errorProneVersion",
+                "com.google.errorprone:error_prone_annotation:$errorProneVersion",
+                "com.google.errorprone:error_prone_check_api:$errorProneVersion"
             )
         }
     }
