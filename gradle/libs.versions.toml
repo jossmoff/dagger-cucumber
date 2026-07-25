@@ -2,9 +2,13 @@
 assertj = "3.27.7"
 auto-service = "1.1.1"
 baseline-error-prone = "6.79.0"
+# baseline-error-prone 6.79.0 references AndroidJdkLibsChecker, which was removed in
+# error_prone_core 2.47.0. Pin to 2.41.0 until a compatible baseline-error-prone release
+# ships. See build.gradle.kts for where this is applied.
+error-prone = "2.41.0"
 compile-testing = "0.23.0"
 cucumber = "7.34.5"
-dagger = "2.59.2"
+dagger = "2.60.1"
 git-version = "5.0.0"
 jakarta-annotation = "3.0.0"
 jakarta-inject = "2.0.1"

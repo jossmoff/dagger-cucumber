@@ -23,6 +23,23 @@ subprojects {
         }
     }
 
+    plugins.withId("com.palantir.baseline-error-prone") {
+        // TODO: Remove this once baseline-error-prone is compatible with error_prone_core 2.47+.
+        // Dagger 2.60.1 pulls in Guava 33.6.0-jre, whose metadata aligns Error Prone artifacts to
+        // 2.47.0. baseline-error-prone 6.79.0 still references AndroidJdkLibsChecker, which was
+        // removed there, so keep the pin narrowly scoped to the affected configurations.
+        val errorProneVersion = libs.versions.error.prone.get()
+        configurations.matching {
+            it.name == "testAnnotationProcessor" || it.name == "errorprone"
+        }.configureEach {
+            resolutionStrategy.force(
+                "com.google.errorprone:error_prone_core:$errorProneVersion",
+                "com.google.errorprone:error_prone_annotation:$errorProneVersion",
+                "com.google.errorprone:error_prone_check_api:$errorProneVersion"
+            )
+        }
+    }
+
     plugins.withId("maven-publish") {
         afterEvaluate {
             extensions.configure<PublishingExtension> {
