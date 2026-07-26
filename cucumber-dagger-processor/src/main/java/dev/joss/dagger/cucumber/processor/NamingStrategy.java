@@ -21,14 +21,9 @@ final class NamingStrategy {
    * comExampleCheckoutCheckoutSteps}.
    */
   static String provisionMethodName(TypeElement typeElement) {
-    String fqn = typeElement.getQualifiedName().toString();
-    int dot = fqn.indexOf('.');
-    if (dot < 0) return decapitalize(fqn);
-    String tail =
-        Arrays.stream(fqn.substring(dot + 1).split("\\."))
-            .map(NamingStrategy::titleCase)
-            .collect(Collectors.joining());
-    return decapitalize(fqn.substring(0, dot)) + tail;
+    String[] parts = typeElement.getQualifiedName().toString().split("\\.");
+    return decapitalize(
+        Arrays.stream(parts).map(NamingStrategy::titleCase).collect(Collectors.joining()));
   }
 
   private static String titleCase(String s) {
