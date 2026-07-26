@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javax.lang.model.element.TypeElement;
 
 /** Derives provision-method names from type names in a consistent, acronym-aware way. */
@@ -30,17 +32,14 @@ final class NamingStrategy {
    */
   static String qualifiedProvisionMethodName(TypeElement typeElement) {
     String[] parts = typeElement.getQualifiedName().toString().split("\\.");
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < parts.length; i++) {
-      String part = parts[i];
-      if (i == 0) {
-        sb.append(decapitalize(part));
-      } else {
-        sb.append(Character.toUpperCase(part.charAt(0)));
-        if (part.length() > 1) sb.append(part.substring(1));
-      }
-    }
-    return sb.toString();
+    return IntStream.range(0, parts.length)
+        .mapToObj(i -> i == 0 ? decapitalize(parts[i]) : titleCase(parts[i]))
+        .collect(Collectors.joining());
+  }
+
+  private static String titleCase(String s) {
+    if (s.isEmpty()) return s;
+    return Character.toUpperCase(s.charAt(0)) + s.substring(1);
   }
 
   /**
