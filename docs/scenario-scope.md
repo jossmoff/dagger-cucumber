@@ -47,9 +47,28 @@ graph LR
     S["@Singleton — PriceList"] --> B["@ScenarioScope — Basket"]
 ```
 
+## Parallel execution
+
+cucumber-dagger supports **thread-level parallelism** (Cucumber's default parallel model).
+
+Enable it in `src/test/resources/junit-platform.properties`:
+
+```properties
+cucumber.execution.parallel.enabled=true
+cucumber.execution.parallel.config.strategy=fixed
+cucumber.execution.parallel.config.fixed.parallelism=4
+```
+
+**Why it is safe:** `DaggerObjectFactory` stores the per-scenario subcomponent in a `ThreadLocal`. When Cucumber dispatches a scenario to a worker thread, `buildWorld()` writes to that thread's slot and `disposeWorld()` clears it. Concurrent scenarios on different threads each see their own `ScenarioScopedComponent` and cannot observe each other's state.
+
+**`@Singleton` bindings** are shared across all threads (and all scenarios) for the lifetime of the test run. This is correct and expected — singletons are inherently shared. Ensure that any singleton you provide is thread-safe if it carries mutable state.
+
+**`ObjectFactoryHolder` constraint:** `ObjectFactoryHolder` is a single-JVM-wide registry. It holds a reference to the single `DaggerObjectFactory` that Cucumber creates via the `ObjectFactory` SPI — there is always exactly one factory per test run. Parallel scenarios all share this factory, which is safe because the per-scenario state is in `ThreadLocal` fields. Do not attempt to run multiple independent Cucumber suites in the same JVM concurrently.
+
 ## Constraints
 
 | Constraint | Detail |
 |---|---|
 | No qualifiers | `@ScenarioScope` + `@Named` on the same method → compile error |
 | Method-level only | Annotating a class with `@ScenarioScope` has no effect; use `@Provides` methods |
+| One suite per JVM | Running multiple independent Cucumber test runs concurrently in the same JVM is not supported (`ObjectFactoryHolder` is a JVM-wide singleton) |
