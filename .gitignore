@@ -28,4 +28,4 @@ replay_pid*
 build/
 .gradle/
 !gradle-wrapper.jar
-!gradle-wrapper.propertiesxqx
+!gradle-wrapper.properties
