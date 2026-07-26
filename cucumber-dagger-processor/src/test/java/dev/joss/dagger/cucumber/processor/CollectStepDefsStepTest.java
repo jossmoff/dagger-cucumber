@@ -48,7 +48,7 @@ class CollectStepDefsStepTest {
     assertThat(compilation).succeeded();
     assertThat(captured.get().isFailed()).isFalse();
     assertThat(captured.get().value().stepDefMethods()).hasSize(1);
-    assertThat(captured.get().value().stepDefMethods().values()).containsExactly("mySteps");
+    assertThat(captured.get().value().stepDefMethods().values()).containsExactly("testMySteps");
   }
 
   @Test

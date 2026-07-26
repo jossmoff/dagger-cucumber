@@ -1,5 +1,7 @@
 package dev.joss.dagger.cucumber.processor;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import javax.lang.model.element.TypeElement;
 
 /** Derives provision-method names from type names in a consistent, acronym-aware way. */
@@ -8,11 +10,25 @@ final class NamingStrategy {
   private NamingStrategy() {}
 
   /**
-   * Returns a camel-case method name derived from the simple name of {@code typeElement}. Delegates
-   * to {@link #decapitalize(String)}.
+   * Returns a camel-case method name derived from the fully-qualified name of {@code typeElement}.
+   * Using the FQN guarantees uniqueness across all types in the same compilation, even when two
+   * classes share a simple name in different packages.
+   *
+   * <p>Each dot-separated segment is title-cased and joined; the first segment is lower-cased via
+   * {@link #decapitalize}.
+   *
+   * <p>Example: {@code com.example.checkout.CheckoutSteps} → {@code
+   * comExampleCheckoutCheckoutSteps}.
    */
   static String provisionMethodName(TypeElement typeElement) {
-    return decapitalize(typeElement.getSimpleName().toString());
+    String[] parts = typeElement.getQualifiedName().toString().split("\\.");
+    return decapitalize(
+        Arrays.stream(parts).map(NamingStrategy::titleCase).collect(Collectors.joining()));
+  }
+
+  private static String titleCase(String s) {
+    if (s.isEmpty()) return s;
+    return Character.toUpperCase(s.charAt(0)) + s.substring(1);
   }
 
   /**

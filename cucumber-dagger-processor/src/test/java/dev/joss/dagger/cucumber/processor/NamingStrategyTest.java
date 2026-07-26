@@ -1,6 +1,7 @@
 package dev.joss.dagger.cucumber.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.stream.Stream;
@@ -10,17 +11,37 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class NamingStrategyTest {
 
-  @Mock private TypeElement typeElement;
+  private static Stream<Arguments> provisionMethodNameCases() {
+    return Stream.of(
+        // single segment (no dot) — just decapitalize
+        Arguments.of("MySteps", "mySteps"),
+        // two segments
+        Arguments.of("test.MySteps", "testMySteps"),
+        // deep package
+        Arguments.of("com.example.checkout.CheckoutSteps", "comExampleCheckoutCheckoutSteps"),
+        // disambiguates classes that share a simple name
+        Arguments.of("checkout.CheckoutSteps", "checkoutCheckoutSteps"),
+        Arguments.of("admin.CheckoutSteps", "adminCheckoutSteps"),
+        // acronym-style simple name preserved by decapitalize
+        Arguments.of("test.URLParser", "testURLParser"));
+  }
 
-  @Mock private Name name;
+  @ParameterizedTest
+  @MethodSource("provisionMethodNameCases")
+  void provisionMethodNameDerivesFromFqn(String fqn, String expectedMethodName) {
+    TypeElement typeElement = mock(TypeElement.class);
+    Name qualifiedName = mock(Name.class);
+    when(qualifiedName.toString()).thenReturn(fqn);
+    when(typeElement.getQualifiedName()).thenReturn(qualifiedName);
+    assertThat(NamingStrategy.provisionMethodName(typeElement)).isEqualTo(expectedMethodName);
+  }
 
-  private static Stream<Arguments> provideClassNamesWithExpectedConversion() {
+  private static Stream<Arguments> decapitalizeCases() {
     return Stream.of(
         Arguments.of("", ""),
         Arguments.of("URLParser", "URLParser"),
@@ -28,16 +49,8 @@ class NamingStrategyTest {
   }
 
   @ParameterizedTest
-  @MethodSource("provideClassNamesWithExpectedConversion")
-  void provisionMethodNameCorrectlyConverts(String className, String expectedMethodName) {
-    when(name.toString()).thenReturn(className);
-    when(typeElement.getSimpleName()).thenReturn(name);
-    assertThat(NamingStrategy.provisionMethodName(typeElement)).isEqualTo(expectedMethodName);
-  }
-
-  @ParameterizedTest
-  @MethodSource("provideClassNamesWithExpectedConversion")
-  void decapitalizeCorrectlyConverts(String className, String expectedMethodName) {
-    assertThat(NamingStrategy.decapitalize(className)).isEqualTo(expectedMethodName);
+  @MethodSource("decapitalizeCases")
+  void decapitalizeCorrectlyConverts(String input, String expected) {
+    assertThat(NamingStrategy.decapitalize(input)).isEqualTo(expected);
   }
 }

@@ -131,7 +131,7 @@ class CucumberDaggerProcessorTest {
     assertThat(compilation)
         .generatedSourceFile("test.GeneratedScopedComponent")
         .contentsAsUtf8String()
-        .contains("MySteps mySteps()");
+        .contains("testMySteps()");
   }
 
   @Test
@@ -164,7 +164,7 @@ class CucumberDaggerProcessorTest {
     assertThat(compilation)
         .generatedSourceFile("test.GeneratedScopedComponent")
         .contentsAsUtf8String()
-        .contains("SomeService someService()");
+        .contains("testSomeService()");
   }
 
   @Test
@@ -320,5 +320,98 @@ class CucumberDaggerProcessorTest {
     assertThat(compilation)
         .hadErrorContaining(
             "Qualified @ScenarioScope provider methods are not currently supported");
+  }
+
+  @Test
+  void stepDefsWithSameSimpleNameInDifferentPackagesGetUniqueProvisionMethods() {
+    Compilation compilation =
+        compile(
+            JavaFileObjects.forSourceLines(
+                "test.AppComponent",
+                "package test;",
+                "import dagger.Component;",
+                "import dev.joss.dagger.cucumber.api.CucumberDaggerConfiguration;",
+                "@CucumberDaggerConfiguration",
+                "@Component(modules = {})",
+                "public interface AppComponent {}"),
+            JavaFileObjects.forSourceLines(
+                "test.checkout.CheckoutSteps",
+                "package test.checkout;",
+                "import jakarta.inject.Inject;",
+                "public class CheckoutSteps {",
+                "  @Inject public CheckoutSteps() {}",
+                "}"),
+            JavaFileObjects.forSourceLines(
+                "test.admin.CheckoutSteps",
+                "package test.admin;",
+                "import jakarta.inject.Inject;",
+                "public class CheckoutSteps {",
+                "  @Inject public CheckoutSteps() {}",
+                "}"));
+
+    assertThat(compilation).succeeded();
+    // Both types must appear with distinct, FQN-derived method names
+    assertThat(compilation)
+        .generatedSourceFile("test.GeneratedScopedComponent")
+        .contentsAsUtf8String()
+        .contains("testCheckoutCheckoutSteps()");
+    assertThat(compilation)
+        .generatedSourceFile("test.GeneratedScopedComponent")
+        .contentsAsUtf8String()
+        .contains("testAdminCheckoutSteps()");
+    // The bare colliding name must not appear
+    assertThat(compilation)
+        .generatedSourceFile("test.GeneratedScopedComponent")
+        .contentsAsUtf8String()
+        .doesNotContain("CheckoutSteps checkoutSteps()");
+  }
+
+  @Test
+  void scopedProvidersWithSameSimpleReturnTypeInDifferentPackagesGetUniqueProvisionMethods() {
+    Compilation compilation =
+        compile(
+            JavaFileObjects.forSourceLines(
+                "test.checkout.Basket", "package test.checkout;", "public class Basket {}"),
+            JavaFileObjects.forSourceLines(
+                "test.admin.Basket", "package test.admin;", "public class Basket {}"),
+            JavaFileObjects.forSourceLines(
+                "test.SomeModule",
+                "package test;",
+                "import dagger.Module;",
+                "import dagger.Provides;",
+                "import dev.joss.dagger.cucumber.api.ScenarioScope;",
+                "@Module",
+                "public class SomeModule {",
+                "  @Provides @ScenarioScope",
+                "  public static test.checkout.Basket provideCheckoutBasket() {",
+                "    return new test.checkout.Basket();",
+                "  }",
+                "  @Provides @ScenarioScope",
+                "  public static test.admin.Basket provideAdminBasket() {",
+                "    return new test.admin.Basket();",
+                "  }",
+                "}"),
+            JavaFileObjects.forSourceLines(
+                "test.AppComponent",
+                "package test;",
+                "import dagger.Component;",
+                "import dev.joss.dagger.cucumber.api.CucumberDaggerConfiguration;",
+                "@CucumberDaggerConfiguration",
+                "@Component(modules = {test.SomeModule.class})",
+                "public interface AppComponent {}"));
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation)
+        .generatedSourceFile("test.GeneratedScopedComponent")
+        .contentsAsUtf8String()
+        .contains("testCheckoutBasket()");
+    assertThat(compilation)
+        .generatedSourceFile("test.GeneratedScopedComponent")
+        .contentsAsUtf8String()
+        .contains("testAdminBasket()");
+    assertThat(compilation)
+        .generatedSourceFile("test.GeneratedScopedComponent")
+        .contentsAsUtf8String()
+        .doesNotContain("Basket basket()");
   }
 }
