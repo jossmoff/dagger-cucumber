@@ -52,10 +52,10 @@ public final class DaggerObjectFactory implements ObjectFactory {
 
   /**
    * Configures this factory with the root Dagger component and the generated component resolver.
-   * No-op if already configured — with parallel execution Cucumber may create one
-   * {@code DaggerBackend} per runner thread and call {@code loadGlue()} on each; only the first
-   * call should win so that a single root component (and a single {@code @Singleton} graph) is
-   * shared across all scenarios.
+   * No-op if already configured — with parallel execution Cucumber may create one {@code
+   * DaggerBackend} per runner thread and call {@code loadGlue()} on each; only the first call
+   * should win so that a single root component (and a single {@code @Singleton} graph) is shared
+   * across all scenarios.
    *
    * @param root the root Dagger component instance
    * @param resolver the generated {@link ComponentResolver} for type dispatch
