@@ -1,11 +1,6 @@
 package dev.joss.dagger.cucumber.processor;
 
-import com.palantir.javapoet.TypeName;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import javax.lang.model.element.TypeElement;
 
@@ -15,22 +10,17 @@ final class NamingStrategy {
   private NamingStrategy() {}
 
   /**
-   * Returns a camel-case method name derived from the simple name of {@code typeElement}. Delegates
-   * to {@link #decapitalize(String)}.
-   */
-  static String provisionMethodName(TypeElement typeElement) {
-    return decapitalize(typeElement.getSimpleName().toString());
-  }
-
-  /**
-   * Returns a camel-case method name derived from the fully-qualified name of {@code typeElement},
-   * guaranteed to be unique across all types in the same compilation. Each dot-separated segment is
-   * title-cased and joined; the first segment is lower-cased via {@link #decapitalize}.
+   * Returns a camel-case method name derived from the fully-qualified name of {@code typeElement}.
+   * Using the FQN guarantees uniqueness across all types in the same compilation, even when two
+   * classes share a simple name in different packages.
+   *
+   * <p>Each dot-separated segment is title-cased and joined; the first segment is lower-cased via
+   * {@link #decapitalize}.
    *
    * <p>Example: {@code com.example.checkout.CheckoutSteps} → {@code
    * comExampleCheckoutCheckoutSteps}.
    */
-  static String qualifiedProvisionMethodName(TypeElement typeElement) {
+  static String provisionMethodName(TypeElement typeElement) {
     String fqn = typeElement.getQualifiedName().toString();
     int dot = fqn.indexOf('.');
     if (dot < 0) return decapitalize(fqn);
@@ -44,40 +34,6 @@ final class NamingStrategy {
   private static String titleCase(String s) {
     if (s.isEmpty()) return s;
     return Character.toUpperCase(s.charAt(0)) + s.substring(1);
-  }
-
-  /**
-   * Returns a new {@link LinkedHashMap} with the same keys as {@code namesByType} but with any
-   * duplicate method-name values replaced by FQN-based names from {@link
-   * #qualifiedProvisionMethodName}. Types whose simple-name-derived method name is already unique
-   * keep their short name.
-   *
-   * @param namesByType ordered map from {@link TypeName} to a simple-name-derived method name
-   * @param typeElements companion map from the same {@link TypeName} keys to their {@link
-   *     TypeElement}, used only for disambiguating collisions
-   */
-  static Map<TypeName, String> deduplicateMethodNames(
-      Map<TypeName, String> namesByType, Map<TypeName, TypeElement> typeElements) {
-    // Identify which simple names collide
-    Set<String> seen = new HashSet<>();
-    Set<String> duplicates = new HashSet<>();
-    for (String name : namesByType.values()) {
-      if (!seen.add(name)) duplicates.add(name);
-    }
-    if (duplicates.isEmpty()) return namesByType;
-
-    Map<TypeName, String> result = new LinkedHashMap<>();
-    for (Map.Entry<TypeName, String> entry : namesByType.entrySet()) {
-      if (duplicates.contains(entry.getValue())) {
-        TypeElement element = typeElements.get(entry.getKey());
-        result.put(
-            entry.getKey(),
-            element != null ? qualifiedProvisionMethodName(element) : entry.getValue());
-      } else {
-        result.put(entry.getKey(), entry.getValue());
-      }
-    }
-    return result;
   }
 
   /**

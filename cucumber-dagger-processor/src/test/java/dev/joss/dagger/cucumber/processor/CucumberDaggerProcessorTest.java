@@ -131,7 +131,7 @@ class CucumberDaggerProcessorTest {
     assertThat(compilation)
         .generatedSourceFile("test.GeneratedScopedComponent")
         .contentsAsUtf8String()
-        .contains("MySteps mySteps()");
+        .contains("testMySteps()");
   }
 
   @Test
@@ -164,7 +164,7 @@ class CucumberDaggerProcessorTest {
     assertThat(compilation)
         .generatedSourceFile("test.GeneratedScopedComponent")
         .contentsAsUtf8String()
-        .contains("SomeService someService()");
+        .contains("testSomeService()");
   }
 
   @Test

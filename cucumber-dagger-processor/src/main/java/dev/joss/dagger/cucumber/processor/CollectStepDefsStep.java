@@ -4,7 +4,6 @@ import com.palantir.javapoet.TypeName;
 import dev.joss.dagger.cucumber.processor.pipeline.ProcessingStep;
 import dev.joss.dagger.cucumber.processor.pipeline.StepResult;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
@@ -23,33 +22,19 @@ final class CollectStepDefsStep
   @Override
   public StepResult<CollectedStepDefs> execute(ProcessingContext ctx, FoundRootComponent input) {
 
-    if (ctx.knownTypes.jakartaInject == null) {
-      return StepResult.succeeded(
-          new CollectedStepDefs(
-              input.rootComponent(),
-              input.rootPackage(),
-              new LinkedHashMap<>(),
-              input.componentBuilder()));
-    }
-
-    List<TypeElement> stepDefTypes =
-        ctx.roundEnv.getElementsAnnotatedWith(ctx.knownTypes.jakartaInject).stream()
-            .filter(CollectStepDefsStep::isConstructor)
-            .map(CollectStepDefsStep::enclosingType)
-            .filter(enclosing -> isInGluePackage(enclosing, ctx, input))
-            .collect(Collectors.toList());
-
-    // Build initial TypeName → simple-method-name and TypeName → TypeElement maps in tandem.
-    Map<TypeName, String> rawMethods = new LinkedHashMap<>();
-    Map<TypeName, TypeElement> typeElements = new LinkedHashMap<>();
-    for (TypeElement type : stepDefTypes) {
-      TypeName typeName = toTypeName(type);
-      rawMethods.putIfAbsent(typeName, NamingStrategy.provisionMethodName(type));
-      typeElements.putIfAbsent(typeName, type);
-    }
-
     Map<TypeName, String> stepDefMethods =
-        NamingStrategy.deduplicateMethodNames(rawMethods, typeElements);
+        ctx.knownTypes.jakartaInject == null
+            ? new LinkedHashMap<>()
+            : ctx.roundEnv.getElementsAnnotatedWith(ctx.knownTypes.jakartaInject).stream()
+                .filter(CollectStepDefsStep::isConstructor)
+                .map(CollectStepDefsStep::enclosingType)
+                .filter(enclosing -> isInGluePackage(enclosing, ctx, input))
+                .collect(
+                    Collectors.toMap(
+                        CollectStepDefsStep::toTypeName,
+                        NamingStrategy::provisionMethodName,
+                        (left, _right) -> left,
+                        LinkedHashMap::new));
 
     return StepResult.succeeded(
         new CollectedStepDefs(
