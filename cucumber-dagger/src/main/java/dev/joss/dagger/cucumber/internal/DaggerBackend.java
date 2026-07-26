@@ -63,7 +63,7 @@ class DaggerBackend implements Backend {
     CucumberDaggerComponent component = loadComponent();
     ComponentResolver resolver = loadResolver();
     container.addClass(component.getClass());
-    getFactory().configure(component, resolver);
+    DaggerObjectFactory.configure(component, resolver);
   }
 
   /** Creates a fresh per-scenario Dagger subcomponent. Called before each scenario. */

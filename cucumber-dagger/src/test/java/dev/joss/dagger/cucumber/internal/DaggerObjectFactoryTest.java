@@ -101,6 +101,7 @@ class DaggerObjectFactoryTest {
   @AfterEach
   void resetHolder() {
     ObjectFactoryHolder.register(null);
+    DaggerObjectFactory.resetForTesting();
   }
 
   @Test
@@ -138,7 +139,7 @@ class DaggerObjectFactoryTest {
   @Test
   void buildWorldCreatesFreshScopedComponentEachScenario() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
-    factory.configure(new TestRootComponentImpl(), new TestComponentResolver());
+    DaggerObjectFactory.configure(new TestRootComponentImpl(), new TestComponentResolver());
 
     factory.buildWorld();
     StepDef first = factory.getInstance(StepDef.class);
@@ -154,7 +155,7 @@ class DaggerObjectFactoryTest {
   @Test
   void getInstanceReturnsScopedInstance() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
-    factory.configure(new TestRootComponentImpl(), new TestComponentResolver());
+    DaggerObjectFactory.configure(new TestRootComponentImpl(), new TestComponentResolver());
     factory.buildWorld();
 
     StepDef instance = factory.getInstance(StepDef.class);
@@ -166,7 +167,7 @@ class DaggerObjectFactoryTest {
   @Test
   void getInstanceReturnsSameInstanceWithinScenario() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
-    factory.configure(new TestRootComponentImpl(), new TestComponentResolver());
+    DaggerObjectFactory.configure(new TestRootComponentImpl(), new TestComponentResolver());
     factory.buildWorld();
 
     // Dagger's @ScenarioScope caching simulated by the test double: same object each call
@@ -180,7 +181,7 @@ class DaggerObjectFactoryTest {
   @Test
   void getInstancePrefersScopedOverRootWhenTypeIsOnBoth() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
-    factory.configure(new TestRootComponentImpl(), new TestComponentResolver());
+    DaggerObjectFactory.configure(new TestRootComponentImpl(), new TestComponentResolver());
     factory.buildWorld();
 
     StepDef instance = factory.getInstance(StepDef.class);
@@ -193,7 +194,7 @@ class DaggerObjectFactoryTest {
   @Test
   void getInstanceReturnsRootInstanceWhenTypeIsOnlyOnRootComponent() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
-    factory.configure(new TestRootComponentImpl(), new TestComponentResolver());
+    DaggerObjectFactory.configure(new TestRootComponentImpl(), new TestComponentResolver());
     factory.buildWorld();
 
     RootService instance = factory.getInstance(RootService.class);
@@ -205,7 +206,7 @@ class DaggerObjectFactoryTest {
   @Test
   void getInstanceThrowsForUnknownType() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
-    factory.configure(new TestRootComponentImpl(), new TestComponentResolver());
+    DaggerObjectFactory.configure(new TestRootComponentImpl(), new TestComponentResolver());
     factory.buildWorld();
 
     assertThatThrownBy(() -> factory.getInstance(String.class))
@@ -217,7 +218,7 @@ class DaggerObjectFactoryTest {
   @Test
   void disposeWorldClearsCurrentScopedComponent() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
-    factory.configure(new TestRootComponentImpl(), new TestComponentResolver());
+    DaggerObjectFactory.configure(new TestRootComponentImpl(), new TestComponentResolver());
 
     factory.buildWorld();
     StepDef firstScenario = factory.getInstance(StepDef.class);
@@ -233,7 +234,7 @@ class DaggerObjectFactoryTest {
   @Test
   void disposeWorldMakesScopedOnlyTypesUnresolvable() {
     DaggerObjectFactory factory = new DaggerObjectFactory();
-    factory.configure(new TestRootComponentImpl(), new TestComponentResolver());
+    DaggerObjectFactory.configure(new TestRootComponentImpl(), new TestComponentResolver());
     factory.buildWorld();
     factory.disposeWorld();
 

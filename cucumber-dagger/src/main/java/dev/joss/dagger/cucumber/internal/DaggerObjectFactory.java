@@ -26,12 +26,24 @@ import io.cucumber.core.backend.ObjectFactory;
  */
 public final class DaggerObjectFactory implements ObjectFactory {
 
-  private CucumberDaggerComponent rootComponent;
-  private ComponentResolver resolver;
+  // All three fields are static so that every DaggerObjectFactory instance created by Cucumber's
+  // parallel workers shares the same state. With parallel execution Cucumber may create one
+  // DaggerObjectFactory per runner thread; ObjectFactoryHolder retains only the last-registered
+  // instance, so DaggerBackend.buildWorld() and a runner's own getInstance() can end up on
+  // different instances. Static fields bridge that gap:
+  //
+  // - rootComponent / resolver: process-level singletons (one @CucumberDaggerConfiguration per
+  //   classpath). Written once by configure() before any scenario starts; volatile ensures safe
+  //   publication to all reader threads.
+  // - currentScoped: a ThreadLocal, so each thread still gets its own ScenarioScopedComponent.
+  //   Making the ThreadLocal instance static means every DaggerObjectFactory reads and writes the
+  //   same thread-local slot, so buildWorld() on instance A is visible to getInstance() on
+  //   instance B when both run on the same thread.
+  private static volatile CucumberDaggerComponent rootComponent;
+  private static volatile ComponentResolver resolver;
 
-  @SuppressWarnings(
-      "ThreadLocalUsage") // intentional instance field - prevents cross-factory leakage
-  private final ThreadLocal<ScenarioScopedComponent> currentScoped = new ThreadLocal<>();
+  @SuppressWarnings("ThreadLocalUsage")
+  private static final ThreadLocal<ScenarioScopedComponent> currentScoped = new ThreadLocal<>();
 
   /** Creates the factory and registers it with {@link ObjectFactoryHolder}. */
   public DaggerObjectFactory() {
@@ -40,13 +52,19 @@ public final class DaggerObjectFactory implements ObjectFactory {
 
   /**
    * Configures this factory with the root Dagger component and the generated component resolver.
+   * No-op if already configured — with parallel execution Cucumber may create one {@code
+   * DaggerBackend} per runner thread and call {@code loadGlue()} on each; only the first call
+   * should win so that a single root component (and a single {@code @Singleton} graph) is shared
+   * across all scenarios.
    *
    * @param root the root Dagger component instance
    * @param resolver the generated {@link ComponentResolver} for type dispatch
    */
-  void configure(CucumberDaggerComponent root, ComponentResolver resolver) {
-    this.rootComponent = root;
-    this.resolver = resolver;
+  static synchronized void configure(CucumberDaggerComponent root, ComponentResolver resolver) {
+    if (DaggerObjectFactory.rootComponent == null) {
+      DaggerObjectFactory.rootComponent = root;
+      DaggerObjectFactory.resolver = resolver;
+    }
   }
 
   /** No-op: the root Dagger component is created once and lives for the whole test run. */
@@ -117,6 +135,13 @@ public final class DaggerObjectFactory implements ObjectFactory {
    * subcomponent so that the next scenario starts clean.
    */
   void disposeWorld() {
+    currentScoped.remove();
+  }
+
+  /** Resets all static state. For use in unit tests only. */
+  static synchronized void resetForTesting() {
+    rootComponent = null;
+    resolver = null;
     currentScoped.remove();
   }
 }
