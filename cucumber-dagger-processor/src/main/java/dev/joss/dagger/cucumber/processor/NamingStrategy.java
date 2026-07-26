@@ -1,12 +1,12 @@
 package dev.joss.dagger.cucumber.processor;
 
 import com.palantir.javapoet.TypeName;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import javax.lang.model.element.TypeElement;
 
 /** Derives provision-method names from type names in a consistent, acronym-aware way. */
@@ -31,10 +31,14 @@ final class NamingStrategy {
    * comExampleCheckoutCheckoutSteps}.
    */
   static String qualifiedProvisionMethodName(TypeElement typeElement) {
-    String[] parts = typeElement.getQualifiedName().toString().split("\\.");
-    return IntStream.range(0, parts.length)
-        .mapToObj(i -> i == 0 ? decapitalize(parts[i]) : titleCase(parts[i]))
-        .collect(Collectors.joining());
+    String fqn = typeElement.getQualifiedName().toString();
+    int dot = fqn.indexOf('.');
+    if (dot < 0) return decapitalize(fqn);
+    String tail =
+        Arrays.stream(fqn.substring(dot + 1).split("\\."))
+            .map(NamingStrategy::titleCase)
+            .collect(Collectors.joining());
+    return decapitalize(fqn.substring(0, dot)) + tail;
   }
 
   private static String titleCase(String s) {
