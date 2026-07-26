@@ -1,5 +1,10 @@
 package dev.joss.dagger.cucumber.processor;
 
+import com.palantir.javapoet.TypeName;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import javax.lang.model.element.TypeElement;
 
 /** Derives provision-method names from type names in a consistent, acronym-aware way. */
@@ -13,6 +18,63 @@ final class NamingStrategy {
    */
   static String provisionMethodName(TypeElement typeElement) {
     return decapitalize(typeElement.getSimpleName().toString());
+  }
+
+  /**
+   * Returns a camel-case method name derived from the fully-qualified name of {@code typeElement},
+   * guaranteed to be unique across all types in the same compilation. Each dot-separated segment is
+   * title-cased and joined; the first segment is lower-cased via {@link #decapitalize}.
+   *
+   * <p>Example: {@code com.example.checkout.CheckoutSteps} → {@code
+   * comExampleCheckoutCheckoutSteps}.
+   */
+  static String qualifiedProvisionMethodName(TypeElement typeElement) {
+    String[] parts = typeElement.getQualifiedName().toString().split("\\.");
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < parts.length; i++) {
+      String part = parts[i];
+      if (i == 0) {
+        sb.append(decapitalize(part));
+      } else {
+        sb.append(Character.toUpperCase(part.charAt(0)));
+        if (part.length() > 1) sb.append(part.substring(1));
+      }
+    }
+    return sb.toString();
+  }
+
+  /**
+   * Returns a new {@link LinkedHashMap} with the same keys as {@code namesByType} but with any
+   * duplicate method-name values replaced by FQN-based names from {@link
+   * #qualifiedProvisionMethodName}. Types whose simple-name-derived method name is already unique
+   * keep their short name.
+   *
+   * @param namesByType ordered map from {@link TypeName} to a simple-name-derived method name
+   * @param typeElements companion map from the same {@link TypeName} keys to their {@link
+   *     TypeElement}, used only for disambiguating collisions
+   */
+  static Map<TypeName, String> deduplicateMethodNames(
+      Map<TypeName, String> namesByType, Map<TypeName, TypeElement> typeElements) {
+    // Identify which simple names collide
+    Set<String> seen = new HashSet<>();
+    Set<String> duplicates = new HashSet<>();
+    for (String name : namesByType.values()) {
+      if (!seen.add(name)) duplicates.add(name);
+    }
+    if (duplicates.isEmpty()) return namesByType;
+
+    Map<TypeName, String> result = new LinkedHashMap<>();
+    for (Map.Entry<TypeName, String> entry : namesByType.entrySet()) {
+      if (duplicates.contains(entry.getValue())) {
+        TypeElement element = typeElements.get(entry.getKey());
+        result.put(
+            entry.getKey(),
+            element != null ? qualifiedProvisionMethodName(element) : entry.getValue());
+      } else {
+        result.put(entry.getKey(), entry.getValue());
+      }
+    }
+    return result;
   }
 
   /**

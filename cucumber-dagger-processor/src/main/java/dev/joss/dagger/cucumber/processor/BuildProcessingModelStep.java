@@ -42,6 +42,7 @@ final class BuildProcessingModelStep
 
     // Scan @Component modules for @Provides @ScenarioScope methods
     Map<TypeName, String> scopedProvisionMethods = new LinkedHashMap<>();
+    Map<TypeName, TypeElement> scopedReturnTypeElements = new LinkedHashMap<>();
     List<TypeElement> userScopedModules = new ArrayList<>();
     List<TypeMirror> userModules =
         ctx.annotationUtils.getClassArrayValue(
@@ -80,12 +81,18 @@ final class BuildProcessingModelStep
             returnTypeElement != null
                 ? NamingStrategy.provisionMethodName(returnTypeElement)
                 : method.getSimpleName().toString();
-        scopedProvisionMethods.putIfAbsent(returnTypeName, methodName);
+        if (scopedProvisionMethods.putIfAbsent(returnTypeName, methodName) == null
+            && returnTypeElement != null) {
+          scopedReturnTypeElements.put(returnTypeName, returnTypeElement);
+        }
       }
       if (isUserScopedModule) userScopedModules.add(moduleElement);
     }
 
     if (hasErrors) return StepResult.failed();
+
+    scopedProvisionMethods =
+        NamingStrategy.deduplicateMethodNames(scopedProvisionMethods, scopedReturnTypeElements);
 
     // Collect abstract zero-argument provision methods on the root component interface for
     // resolveRoot dispatch in GeneratedComponentResolver.
