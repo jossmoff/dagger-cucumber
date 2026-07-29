@@ -6,6 +6,8 @@
 - Gradle (Kotlin DSL, Groovy DSL) or Maven
 - Basic familiarity with Dagger 2: components, modules, `@Provides`
 
+The current release version is available on [Maven Central](https://central.sonatype.com/artifact/dev.joss/cucumber-dagger). Replace `<version>` in the snippets below with the latest published version.
+
 ## 1. Add dependencies
 
 ### Gradle Kotlin DSL
