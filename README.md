@@ -1,8 +1,14 @@
 # dagger-cucumber
 
+[![CI](https://github.com/jossmoff/dagger-cucumber/actions/workflows/ci.yaml/badge.svg)](https://github.com/jossmoff/dagger-cucumber/actions/workflows/ci.yaml)
+[![Maven Central](https://img.shields.io/maven-central/v/dev.joss/cucumber-dagger.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/dev.joss/cucumber-dagger)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A Cucumber extension that uses [Dagger 2](https://dagger.dev) for compile-time dependency injection in your test suite, replacing runtime reflection with generated code.
 
 ## Quick start
+
+The current release version is shown in the Maven Central badge above. Replace `<version>` below with that value.
 
 ### 1. Add dependencies
 
