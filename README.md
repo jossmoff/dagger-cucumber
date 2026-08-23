@@ -1,6 +1,7 @@
 # dagger-cucumber
 
 [![CI](https://github.com/jossmoff/dagger-cucumber/actions/workflows/ci.yaml/badge.svg)](https://github.com/jossmoff/dagger-cucumber/actions/workflows/ci.yaml)
+[![codecov](https://codecov.io/gh/jossmoff/dagger-cucumber/branch/main/graph/badge.svg)](https://codecov.io/gh/jossmoff/dagger-cucumber)
 [![Maven Central](https://img.shields.io/maven-central/v/dev.joss/cucumber-dagger.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/dev.joss/cucumber-dagger)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
