@@ -121,7 +121,7 @@ class BuildProcessingModelStepTest {
   }
 
   @Test
-  void qualifiedScenarioScopeMethodHaltsAndEmitsError() {
+  void namedQualifiedScenarioScopeMethodSucceedsAndGeneratesNamedProvision() {
     AtomicReference<StepResult<ProcessingModel>> captured = new AtomicReference<>();
 
     Compilation compilation =
@@ -144,7 +144,7 @@ class BuildProcessingModelStepTest {
                 "import jakarta.inject.Named;",
                 "@Module",
                 "public class SomeModule {",
-                "  @Provides @ScenarioScope @Named(\"foo\")",
+                "  @Provides @ScenarioScope @Named(\"primary\")",
                 "  public static SomeService provide() { return new SomeService(); }",
                 "}"),
             JavaFileObjects.forSourceLines(
@@ -156,10 +156,67 @@ class BuildProcessingModelStepTest {
                 "@Component(modules = {test.SomeModule.class})",
                 "public interface AppComponent {}"));
 
-    assertThat(compilation)
-        .hadErrorContaining(
-            "Qualified @ScenarioScope provider methods are not currently supported");
-    assertThat(captured.get().isFailed()).isTrue();
+    assertThat(compilation).succeeded();
+    assertThat(captured.get().isFailed()).isFalse();
+    ProcessingModel model = captured.get().value();
+    assertThat(model.userScopedModules()).hasSize(1);
+    assertThat(model.scopedProvisionMethods()).isEmpty();
+    assertThat(model.namedScopedProvisionMethods()).hasSize(1);
+    NamedScopedProvision named = model.namedScopedProvisionMethods().getFirst();
+    assertThat(named.methodName()).isEqualTo("primarySomeService");
+    assertThat(named.namedValue()).isEqualTo("primary");
+  }
+
+  @Test
+  void nonNamedQualifiedScenarioScopeMethodSucceedsAndIncludesModuleWithoutProvision() {
+    AtomicReference<StepResult<ProcessingModel>> captured = new AtomicReference<>();
+
+    Compilation compilation =
+        StepTestSupport.compile(
+            ctx -> {
+              TypeElement root =
+                  ctx.processingEnv.getElementUtils().getTypeElement("test.AppComponent");
+              CollectedStepDefs input =
+                  new CollectedStepDefs(root, "test", new LinkedHashMap<>(), null);
+              captured.set(new BuildProcessingModelStep().execute(ctx, input));
+            },
+            JavaFileObjects.forSourceLines(
+                "test.SomeService", "package test;", "public class SomeService {}"),
+            JavaFileObjects.forSourceLines(
+                "test.MyQualifier",
+                "package test;",
+                "import jakarta.inject.Qualifier;",
+                "import java.lang.annotation.*;",
+                "@Qualifier",
+                "@Retention(RetentionPolicy.RUNTIME)",
+                "@Target({ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD})",
+                "public @interface MyQualifier {}"),
+            JavaFileObjects.forSourceLines(
+                "test.SomeModule",
+                "package test;",
+                "import dagger.Module;",
+                "import dagger.Provides;",
+                "import dev.joss.dagger.cucumber.api.ScenarioScope;",
+                "@Module",
+                "public class SomeModule {",
+                "  @Provides @ScenarioScope @MyQualifier",
+                "  public static SomeService provide() { return new SomeService(); }",
+                "}"),
+            JavaFileObjects.forSourceLines(
+                "test.AppComponent",
+                "package test;",
+                "import dagger.Component;",
+                "import dev.joss.dagger.cucumber.api.CucumberDaggerConfiguration;",
+                "@CucumberDaggerConfiguration",
+                "@Component(modules = {test.SomeModule.class})",
+                "public interface AppComponent {}"));
+
+    assertThat(compilation).succeeded();
+    assertThat(captured.get().isFailed()).isFalse();
+    ProcessingModel model = captured.get().value();
+    assertThat(model.userScopedModules()).hasSize(1);
+    assertThat(model.scopedProvisionMethods()).isEmpty();
+    assertThat(model.namedScopedProvisionMethods()).isEmpty();
   }
 
   @Test
