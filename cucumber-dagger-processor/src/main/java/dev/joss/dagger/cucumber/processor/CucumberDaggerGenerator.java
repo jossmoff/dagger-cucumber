@@ -350,12 +350,11 @@ final class CucumberDaggerGenerator {
           model.componentBuilder().getEnclosedElements().stream()
               .filter(e -> e.getKind() == ElementKind.METHOD)
               .map(e -> (ExecutableElement) e)
-              .filter(
-                  e ->
-                      e.getParameters().isEmpty()
-                          && processingEnv
-                              .getTypeUtils()
-                              .isAssignable(e.getReturnType(), rootComponentType))
+              .filter(e ->
+                  e.getParameters().isEmpty()
+                      && processingEnv
+                          .getTypeUtils()
+                          .isAssignable(e.getReturnType(), rootComponentType))
               .map(e -> e.getSimpleName().toString())
               .findFirst()
               .orElse(null);
