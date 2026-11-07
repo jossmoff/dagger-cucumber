@@ -35,16 +35,14 @@ class PipelineTest {
 
     StepResult<Integer> result =
         Pipeline.of("myCtx", 0)
-            .pipe(
-                (ctx, n) -> {
-                  capturedCtx[0] = ctx;
-                  return StepResult.succeeded(n + 1);
-                })
-            .pipe(
-                (ctx, n) -> {
-                  capturedCtx[1] = ctx;
-                  return StepResult.succeeded(n + 1);
-                })
+            .pipe((ctx, n) -> {
+              capturedCtx[0] = ctx;
+              return StepResult.succeeded(n + 1);
+            })
+            .pipe((ctx, n) -> {
+              capturedCtx[1] = ctx;
+              return StepResult.succeeded(n + 1);
+            })
             .result();
 
     assertThat(result.isFailed()).isFalse();
@@ -59,11 +57,10 @@ class PipelineTest {
     StepResult<Integer> result =
         Pipeline.of("ctx", "input")
             .pipe((_ctx, _input) -> StepResult.failed())
-            .pipe(
-                (_ctx, _input) -> {
-                  invoked[0] = true;
-                  return StepResult.succeeded(42);
-                })
+            .pipe((_ctx, _input) -> {
+              invoked[0] = true;
+              return StepResult.succeeded(42);
+            })
             .result();
 
     assertThat(result.isFailed()).isTrue();
@@ -77,16 +74,14 @@ class PipelineTest {
     StepResult<String> result =
         Pipeline.of("ctx", "start")
             .pipe((_ctx, _input) -> StepResult.<String>failed())
-            .pipe(
-                (_ctx, _input) -> {
-                  invokedCount[0]++;
-                  return StepResult.succeeded("a");
-                })
-            .pipe(
-                (_ctx, _input) -> {
-                  invokedCount[0]++;
-                  return StepResult.succeeded("b");
-                })
+            .pipe((_ctx, _input) -> {
+              invokedCount[0]++;
+              return StepResult.succeeded("a");
+            })
+            .pipe((_ctx, _input) -> {
+              invokedCount[0]++;
+              return StepResult.succeeded("b");
+            })
             .result();
 
     assertThat(result.isFailed()).isTrue();
