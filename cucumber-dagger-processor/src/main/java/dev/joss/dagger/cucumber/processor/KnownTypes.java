@@ -43,6 +43,9 @@ final class KnownTypes {
    */
   final TypeElement jakartaQualifier;
 
+  /** {@code jakarta.inject.Named} - qualifier annotation for string-keyed bindings */
+  final TypeElement jakartaNamed;
+
   KnownTypes(ProcessingEnvironment processingEnv) {
     Elements elements = processingEnv.getElementUtils();
     cucumberDaggerConfiguration = elements.getTypeElement(API_PKG + ".CucumberDaggerConfiguration");
@@ -53,5 +56,6 @@ final class KnownTypes {
     jakartaInject = elements.getTypeElement("jakarta.inject.Inject");
     jakartaScope = elements.getTypeElement("jakarta.inject.Scope");
     jakartaQualifier = elements.getTypeElement("jakarta.inject.Qualifier");
+    jakartaNamed = elements.getTypeElement("jakarta.inject.Named");
   }
 }
