@@ -121,6 +121,19 @@ final class CucumberDaggerGenerator {
               .build());
     }
 
+    ClassName jakartaNamed = ClassName.get("jakarta.inject", "Named");
+    for (NamedScopedProvision named : model.namedScopedProvisionMethods()) {
+      componentBuilder.addMethod(
+          MethodSpec.methodBuilder(named.methodName())
+              .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+              .addAnnotation(
+                  AnnotationSpec.builder(jakartaNamed)
+                      .addMember("value", "$S", named.namedValue())
+                      .build())
+              .returns(named.returnType())
+              .build());
+    }
+
     for (Map.Entry<TypeName, String> entry : model.stepDefMethods().entrySet()) {
       componentBuilder.addMethod(
           MethodSpec.methodBuilder(entry.getValue())

@@ -33,6 +33,13 @@ import javax.lang.model.type.TypeMirror;
  *     that Dagger generates {@code builder()} on the {@code DaggerXxx} class. At runtime, {@link
  *     dev.joss.dagger.cucumber.internal.DaggerBackend} falls back to {@code builder().build()} when
  *     {@code create()} is absent.
+ * @param namedScopedProvisionMethods Named (qualified) scoped provision methods: each entry
+ *     describes a {@code @Named}-qualified {@code @ScenarioScope} binding, holding the return type,
+ *     the generated method name, and the qualifier value. These methods are emitted on {@code
+ *     GeneratedScopedComponent} with a {@code @Named} annotation so Dagger resolves the correct
+ *     binding. They are intentionally excluded from the {@code resolveScoped} dispatch because the
+ *     dispatcher uses {@code Class<?>} as its key and cannot distinguish multiple bindings of the
+ *     same type with different qualifiers.
  */
 record ProcessingModel(
     TypeElement rootComponent,
@@ -43,4 +50,5 @@ record ProcessingModel(
     List<TypeMirror> userModules,
     List<AnnotationMirror> scopeAnnotations,
     Map<TypeName, String> rootProvisionMethods,
-    TypeElement componentBuilder) {}
+    TypeElement componentBuilder,
+    List<NamedScopedProvision> namedScopedProvisionMethods) {}
